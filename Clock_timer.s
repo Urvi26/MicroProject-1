@@ -20,13 +20,13 @@ clock_input_hrs:
 	movwf	clock_hrs
 	
 rewrite_clock: 
-	call LCD_Clear
-	movf	clock_sec, w
-	call Write_Decimal_LCD
-	movf	clock_min, w
-	call Write_Decimal_LCD
-	movf	clock_hrs, w
-	call Write_Decimal_LCD
+	call	LCD_Clear
+	movf	clock_sec, W
+	call	Write_Decimal_LCD
+	movf	clock_min, W
+	call	Write_Decimal_LCD
+	movf	clock_hrs, W
+	call	Write_Decimal_LCD
 
 Clock_Setup: 
 	movlw  0x00
@@ -70,8 +70,8 @@ Clock:
 	btfss	TMR0IF		; check that this is timer0 interrupt
 	retfie	f		; if not then return
 	call	clock_inc	; increment PORTJ 
+	call	rewrite_clock
 	bcf	TMR0IF		; clear interrupt flag
-	
 	retfie	f		; fast return from interrupt
 	
     end
