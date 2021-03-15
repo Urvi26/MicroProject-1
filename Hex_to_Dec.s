@@ -34,8 +34,10 @@ Write_Decimal_LCD:
 	    ;first multiplication;
 	movwf	small		;preparing inputs for multiplication
 		
-	movff	0xf6, bigl
-	movff	0x28, bigh
+	movlw	0xf6
+	movwf	bigl
+	movlw	0x28
+	movwf	bigh
 	
 	call  multiply16x8   ;first multiplication of conversion
 		

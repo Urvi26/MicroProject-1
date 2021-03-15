@@ -1,6 +1,9 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble
+global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble, UART_Transmit_Message
+global	LCD_Write_Time, LCD_Write_Temp
+
+extrn	UART_Setup
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -8,12 +11,32 @@ LCD_cnt_h:	ds 1	; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms:	ds 1	; reserve 1 byte for ms counter
 LCD_tmp:	ds 1	; reserve 1 byte for temporary use
 LCD_counter:	ds 1	; reserve 1 byte for counting through nessage
+counter1:	ds  1
+counter2:	ds  1
+    
+psect	udata_bank4
+myArray1:    ds 0x80
+myArray2:    ds 0x80
 
 PSECT	udata_acs_ovr,space=1,ovrld,class=COMRAM
 LCD_hex_tmp:	ds 1    ; reserve 1 byte for variable LCD_hex_tmp
 
 	LCD_E	EQU 5	; LCD enable bit
     	LCD_RS	EQU 4	; LCD register select bit
+	
+psect	data
+	
+Time_Message:	
+    db	    'T', 'i', 'm', 'e', ':', ' ', 0x0a
+    
+    Time_Message_l  EQU	7
+    align   2
+    
+Temp_Message:	
+    db	    'T', 'e', 'm', 'p', ':', ' ', 0x0a
+    
+    Temp_Message_l  EQU	7
+    align   2
 
 psect	lcd_code,class=CODE
 LCD_Clear: movlw	00000001B	; display clear
@@ -38,7 +61,7 @@ LCD_Setup:
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
-	movlw	00001111B	; display on, cursor on, blinking on
+	movlw	00001100B	; display on, cursor on, blinking on
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
@@ -50,6 +73,9 @@ LCD_Setup:
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
+	
+	bcf	CFGS
+	bsf	EEPGD
 	return
 
 LCD_Write_Character:
@@ -59,10 +85,10 @@ LCD_Write_Character:
 	return	
 	
 LCD_Set_Position:	    
-	    call    LCD_Send_Byte_I
-	    movlw   10		; wait 40us
-	    call    LCD_delay_x4us
-	    return
+	call    LCD_Send_Byte_I
+	movlw   10		; wait 40us
+	call    LCD_delay_x4us
+	return
 	
 LCD_Write_Hex:			; Writes byte stored in W as hex
 	movwf	LCD_hex_tmp, A
@@ -92,6 +118,51 @@ LCD_Write_High_Nibble:
 	swapf	LCD_hex_tmp, W, A	; high nibble first
 	call	LCD_Hex_Nib
 	return
+	
+LCD_Write_Time:
+	lfsr	0, myArray1
+	movlw	low highword(Time_Message)
+	movwf	TBLPTRU, A
+	movlw	high(Time_Message)
+	movwf	TBLPTRH, A
+	movlw	low(Time_Message)
+	movwf	TBLPTRL, A
+	movlw	Time_Message_l
+	movwf	counter1, A
+loop1:	tblrd*+
+	movff	TABLAT, POSTINC0
+	decfsz	counter1, A
+	bra loop1
+	
+	movlw	Time_Message_l
+	lfsr	2, myArray1
+	
+	movlw	Time_Message_l-1
+	call	LCD_Write_Message
+	return
+	
+LCD_Write_Temp:
+	lfsr	0, myArray2
+	movlw	low highword(Temp_Message)
+	movwf	TBLPTRU, A
+	movlw	high(Temp_Message)
+	movwf	TBLPTRH, A
+	movlw	low(Temp_Message)
+	movwf	TBLPTRL, A
+	movlw	Temp_Message_l
+	movwf	counter2, A
+loop2:	tblrd*+
+	movff	TABLAT, POSTINC0
+	decfsz	counter2, A
+	bra loop2
+	
+	movlw	Temp_Message_l
+	lfsr	2, myArray2
+	
+	movlw	Temp_Message_l-1
+	call	LCD_Write_Message
+	return
+	
 	
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter, A

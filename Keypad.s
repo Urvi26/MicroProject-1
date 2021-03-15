@@ -8,7 +8,7 @@ keypad_input: ds 1
 delay_val: ds 1
 keypad_char: ds 1 
  
-    psect	code, abs	
+psect	keypad_code,class=CODE	
 
 Keypad:
 	call Keypad_Setup
