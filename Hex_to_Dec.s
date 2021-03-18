@@ -31,60 +31,64 @@ psect	hextodecimal_code,class=CODE
     
     ;convert hex to decimal;
 Write_Decimal_LCD:
-	    ;first multiplication;
-	movwf	small		;preparing inputs for multiplication
+	
+	;first multiplication;
+	;preparing inputs for multiplication
+	movwf	small	    ;move hex time to small
 		
-	movlw	0xf6
+	movlw	0xf6	    ;move conversion factor 0x28f6 to big 
 	movwf	bigl
 	movlw	0x28
 	movwf	bigh
 	
-	call  multiply16x8   ;first multiplication of conversion
+	call  multiply16x8   ;multiply hex time by hex to dec conversion factor
 		
-	    ;second multiplication;
-	movlw	0x0A	;preparing inputs for multiplication
+	;second multiplication;
+	;preparing inputs for multiplication
+	movlw	0x0A	    ;move dec 10 to ein (eight bit input)
 	movwf	ein    
 	
-	movf	seouth, W	;preparing inputs for multiplication
-	andlw	0x0f
-	movwf	tinh		
+	movf	seouth, W   ;move remaining result of time x 0x28f6  multiplication into inputs
+	andwf	0x0f	    ;setting first digit of seouth to 0
+	movwf	tinh	    ;and move to input
 	movff	seoutm, tinm
 	movff	seoutl, tinl
 	
-	call	multiply24x8	;second multiplication for conversion
+	call	multiply24x8	;multiplication of remaining r digits of first multiplication by 0x0A
 	
 	movf	teouth, W
-	call	LCD_Write_High_Nibble	;display high nibble of most sig byte of answer
+	call	LCD_Write_High_Nibble	;display most significant digit of multiplication on LCD
 	
-	    ;third multiplication;
-	movf	teouth, W	    ;preparing inputs for multiplication
-	andlw	0x0f
+	;third multiplication;
+	;preparing inputs for multiplication
+	movf	teouth, W	    
+	andlw	0x0f		;setting first digit of second multiplication to 0
 	movwf	tinh		
 	movff	teoutl, tinm
 	movff	teoutll, tinl
 	
-	call	multiply24x8  ;third multiplication for conversion
+	call	multiply24x8	;multiplication of remainder of second multiplication with 0x0A
 	
 	movf	teouth, W
-	call	LCD_Write_High_Nibble	;display high nibble of most sig byte of answer
+	call	LCD_Write_High_Nibble	;display most significant digit of multiplication to LCD
 	return
 	
-multiply24x8:	
-    
-	movf    tinl, W
+multiply24x8:		;multiplication of 24 bit number by 8 bit number
+	
+	movf    tinl, W	    ;multiplying 8 bit no. by lowest byte of 24 bit
 	mulwf   ein
 	movff   PRODL, teoutll
 	movff   PRODH, teoutl
 
-	movff   ein, small
+	movff   ein, small  
 	movff   tinm, bigl
 	movff   tinh, bigh
-	call    multiply16x8
+	call    multiply16x8	;multiplying 8 bit no. by highest two byte of 24 bit
 	movff   seoutl, teouti
 	movff   seoutm, teouth
 	movff   seouth, teouthh
 
-	movf    teouti, W
+	movf    teouti, W	;adding two multiplications together
 	addwf   teoutl, 1, 0
 
 	movlw   0x00
@@ -98,13 +102,13 @@ multiply16x8:
     
 	    ;multiplying 8bit number with least sig byte of 16bit number
 	movf	small, W
-	mulwf	bigl	    ;multiply W with 0x21
+	mulwf	bigl	    ;multiply W with bigl
 	movff	PRODL, seoutl ;store product in file registers
 	movff	PRODH, seoutm
 	
 	    ;multiplying 8 bit number with most sig byte of 16 bit number
 	movf	small, W
-	mulwf	bigh	;multiply W with 0x22
+	mulwf	bigh	;multiply W with bigh
 	movff	PRODL, seouti
 	movff	PRODH, seouth
 	

@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-extrn	Clock_Setup, Clock, LCD_Setup, LCD_Write_Character, LCD_Clear, LCD_Set_Position
+extrn	Clock_Setup, Clock, LCD_Setup, LCD_Write_Character, LCD_Clear, LCD_Set_Position, Keypad, operation
 extrn  UART_Setup, UART_Transmit_Message
 
 psect	code, abs
@@ -15,14 +15,14 @@ int_hi:	org	0x0008	; high vector, no low vector
 start:
 	call	UART_Setup
 	call	LCD_Setup
-	
-	;movlw	0x35
-	;call	LCD_Write_Character
-	;movlw	11000000B
-	;call	LCD_Set_Position
-	;movlw	0x35
-	;call	LCD_Write_Character
 	call	Clock_Setup
-	goto	$	; Sit in infinite loop
+	
+settings_clock:
+	call	Keypad
+	movlw	0x0f
+	CPFSEQ	keypad_val, A
+	goto	settings_clock
+	call	operation
+	goto	settings_clock	; Sit in infinite loop
     
 	end	main
