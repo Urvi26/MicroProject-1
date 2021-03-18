@@ -2,6 +2,7 @@
 	
 extrn	Write_Decimal_LCD, LCD_Clear, LCD_Write_Character, LCD_Write_Hex, operation_check
 extrn	LCD_Set_Position, LCD_Write_Time, LCD_Write_Temp, Keypad, LCD_Send_Byte_I, LCD_Send_Byte_D, keypad_val, keypad_ascii
+extrn	LCD_Write_Low_Nibble, LCD_Write_High_Nibble
 global	Clock, Clock_Setup, operation
     
 psect	udata_acs
@@ -28,15 +29,20 @@ hex_E: ds 1
 hex_F: ds 1
 hex_null: ds 1
 set_time_hrs1: ds 1
-set_time_hrs2: ds 1    
+set_time_hrs2: ds 1  
+set_time_hrsint: ds 1  
 set_time_min1: ds 1
 set_time_min2: ds 1
+set_time_minint: ds 1  
 set_time_sec1: ds 1
 set_time_sec2: ds 1
+set_time_secint: ds 1  
 temporary_hrs: ds 1
 temporary_min: ds 1
 temporary_sec: ds 1
 skip_byte: ds 1
+timer_start_value_1: ds 1
+timer_start_value_2: ds 1
     
 	
     
@@ -58,10 +64,21 @@ Clock_Setup:
 	movwf	hex_A
 	movlw	0x0B
 	movwf	hex_B
+	movlw	0x0C
+	movwf	hex_C
+	movlw	0x0D
+	movwf	hex_D
 	movlw	0x0E
 	movwf	hex_E
+	movlw	0x0F
+	movwf	hex_F
 	movlw	0xff
-	movwf	hex_null	
+	movwf	hex_null
+	
+	movlw	0x0B
+	movwf	timer_start_value_1
+	movlw	0xDB
+	movwf	timer_start_value_2
 	
 	clrf	skip_byte	;set skip byte to zero to be used to skip lines later
 	
@@ -77,10 +94,8 @@ Clock:
 	call	clock_inc	; increment clock time
 	btfss	operation_check, 0 ;skip rewrite clock if = 1
 	call	rewrite_clock	;write and display clock time as decimal on LCD  
-	movlw	0x0B		;setting upper byte timer start value
-	movwf	TMR0H, A	
-	movlw	0xDB		;setting lower byte timer start value
-	movwf	TMR0L, A
+	movff	timer_start_value_1, TMR0H	;setting upper byte timer start value
+	movff	timer_start_value_2, TMR0L		;setting lower byte timer start value
 	bcf	TMR0IF		; clear interrupt flag
 	retfie	f		; fast return from interrupt	
 	
@@ -148,17 +163,28 @@ check_cancel:
 	
 	
 set_time: 
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
 	movlw	00001111B
 	call    LCD_Send_Byte_I
-	clrf	set_time_hrs1
-	clrf	set_time_hrs2
-	clrf	set_time_min1
-	clrf	set_time_min2
-	clrf	set_time_sec1
-	clrf	set_time_sec2
+    
+	movlw	10000000B	    ;set cursor to first line
+	call	LCD_Set_Position
+	
+	movlw	0x0
+	movwf	set_time_hrs1
+	movwf	set_time_hrs2
+	movwf	set_time_min1
+	movwf	set_time_min2
+	movwf	set_time_sec1
+	movwf	set_time_sec2
+	call write_set_time
+	
+	movlw	10000000B	    ;set cursor to first line
+	call	LCD_Set_Position
+	
+	
+	call	LCD_Write_Time	    ;write 'Time: ' to LCD
 set_time1:	
+    
 	call input_check	  
 	
 	CPFSEQ	hex_C
@@ -168,7 +194,7 @@ set_time1:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call write_set_time
+	call	set_time_write
 	movff	keypad_val, set_time_hrs1
 	call delay
 set_time2:
@@ -181,7 +207,10 @@ set_time2:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call write_set_time
+	call set_time_write
+	movlw	0x3A		    ;write ':' to LCD
+	call	LCD_Write_Character 
+	
 	movff	keypad_val, set_time_hrs2
 	call delay
 set_time3:
@@ -194,7 +223,7 @@ set_time3:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call write_set_time
+	call set_time_write
 	movff	keypad_val, set_time_min1
 	call delay
 set_time4:
@@ -207,7 +236,10 @@ set_time4:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call	write_set_time
+	call	set_time_write
+	movlw	0x3A		    ;write ':' to LCD
+	call	LCD_Write_Character 
+	
 	movff	keypad_val, set_time_min2
 	call delay
 set_time5:
@@ -233,11 +265,12 @@ set_time6:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call write_set_time
+	call set_time_write
 	movff	keypad_val, set_time_sec2
 	call delay
 
 check_enter:
+	call input_check
 	CPFSEQ	hex_C
 	btfsc	skip_byte, 0
 	return
@@ -248,6 +281,11 @@ check_enter:
 	
 enter_time:
 	call input_into_clock
+	
+	
+cancel:
+	movlw	00001100B
+	call    LCD_Send_Byte_I
 	
 	return
 	
@@ -279,22 +317,22 @@ write_set_time:
     	movlw	10000000B	    ;set cursor to first line
 	call	LCD_Set_Position
 	call	LCD_Write_Time	    ;write 'Time: ' to LCD
-	movf	set_time_hrs1, W
-	call	LCD_Send_Byte_D
-	movf	set_time_hrs2, W
-	call	LCD_Send_Byte_D
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
 	movlw	0x3A		    ;write ':' to LCD
 	call	LCD_Write_Character 
-	movf	set_time_min1, W
-	call	LCD_Send_Byte_D
-	movf	set_time_min2, W
-	call	LCD_Send_Byte_D
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
 	movlw	0x3A		    ;write ':' to LCD
 	call	LCD_Write_Character
-	movf	set_time_sec1, W
-	call	LCD_Send_Byte_D
-	movf	set_time_sec2, W
-	call	LCD_Send_Byte_D
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
 	movlw	11000000B	    ;set cursor to first line
 	call	LCD_Set_Position
 	call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
@@ -307,33 +345,61 @@ set_time_write:
 	return
     
 input_into_clock:
-	movf	set_time_hrs1, W
-	mullw	0x0A
-	movf	set_time_hrs2, W
-	addwf	PRODL, 0, 1
+	
+	clrf	PRODL
+	clrf	PRODH
+	
+	movlw	0x01
+	movwf	set_time_hrs1
+	movlw	0x02
+	movwf	set_time_hrs2
+    
+	;movlw	0x03
+	;movwf	set_time_hrs1
+	movlw	0x0A
+	mulwf	set_time_hrs1
+	movff	PRODL, temporary_hrs
+	movf	set_time_hrs2
+	;movf	set_time_hrs2, W
+	addwf	temporary_hrs, W
+	movwf	temporary_hrs, W
+	
+	
+	;movff	PRODL, set_time_hrsint
+	;movlw	set_time_hrsint
+	;addwf	set_time_hrs2, W
+	;movwf	temporary_hrs
 	CPFSLT	check_24
-	goto	output_error
-	movwf	temporary_hrs	
+	;call	output_error
 	
-	movf	set_time_min1, W
-	mullw	0x0A
-	movf	set_time_min2, W
-	addwf	PRODL, 0, 1
-	CPFSLT	check_60
-	goto	output_error
+	movlw	0x0A
+	mulwf	set_time_min1
+	movff	PRODL, set_time_minint
+	movlw	set_time_minint
+	;addwf	set_time_min2, W
 	movwf	temporary_min
-	
-	movf	set_time_min1, W
-	mullw	0x0A
-	movf	set_time_min2, W
-	addwf	PRODL, 0, 1
 	CPFSLT	check_60
-	goto	output_error
+	;call	output_error
+	
+	movlw	0x0A
+	mulwf	set_time_sec1
+	movff	PRODL, set_time_secint
+	movlw	set_time_secint
+	;addwf	set_time_sec2, W
 	movwf	temporary_sec
+	CPFSLT	check_60
+	;call	output_error
 	
 	movff	temporary_hrs, clock_hrs
 	movff	temporary_min, clock_min
 	movff	temporary_sec, clock_sec
+	
+	;movlw	0x01
+	;movwf	keypad_val, A	
+	;movf	keypad_val, A
+	;movwf	clock_hrs
+	;movwf	clock_min
+	;movwf	clock_sec
 	return
 	
 output_error:
@@ -350,7 +416,7 @@ output_error:
     call	LCD_Write_Character	;write 'o'
     movlw	0x72
     call	LCD_Write_Character	;write 'r'  
-    movlw	0xff
+    movlw	0x0A
     call	LCD_delay_x4us    ;WRITE THIS SUBROUTINE FOR A 3SEC DELAY LATER
     return
     

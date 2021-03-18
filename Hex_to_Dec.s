@@ -54,7 +54,7 @@ Write_Decimal_LCD:
 	movff	seoutm, tinm
 	movff	seoutl, tinl
 	
-	call	multiply24x8	;multiplication of remaining r digits of first multiplication by 0x0A
+	call	multiply24x8	;multiplication of remaining r§ digits of first multiplication by 0x0A
 	
 	movf	teouth, W
 	call	LCD_Write_High_Nibble	;display most significant digit of multiplication on LCD

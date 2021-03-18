@@ -82,8 +82,8 @@ LCD_Setup:
 
 LCD_Write_Character:	;send ascii code to LCD to display character
 	call	LCD_Send_Byte_D
-	movlw	10
-	call	delay
+	movlw	10	    ; delay 40us
+	call	LCD_delay_x4us
 	return	
 	
 LCD_Set_Position:	;set position at which inputs will be displayed  

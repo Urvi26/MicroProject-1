@@ -57,13 +57,14 @@ check_null:
 	movlw	0xff
 	movwf	keypad_val, A	
 	movlw	0x00	;ascii for null
-	movwf	keypad_ascii
+	movwf	keypad_ascii, A
 	return
+	
 check1:	movlw	11101110B	;move keypad value expected from 1 button into W
     	CPFSEQ	keypad_input	;check if keypad output equal to 1 expected output
 	bra check2		;branch to next check if not equal
 	movlw	0x01		;if equal set keypad_val to 0x01
-	movwf	keypad_val, A	
+	movwf	keypad_val	
 	movlw	0x31		;ascii	code for 1
 	movwf	keypad_ascii	;set keypad_ascii to 1 ascii code
 	return

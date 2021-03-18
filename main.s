@@ -22,16 +22,16 @@ start:
 	call	LCD_Setup
 	call	Clock_Setup
 	
-	clrf	operation_check
+	bcf	operation_check, 0 
 	
 settings_clock:
 	call	Keypad
 	movlw	0x0f
 	CPFSEQ	keypad_val
 	goto	settings_clock
-	setf	operation_check, 0
+	bsf	operation_check, 0
 	call	operation
-	clrf	operation_check
+	bcf	operation_check, 0
 	goto	settings_clock	; Sit in infinite loop
     
 	end	main
