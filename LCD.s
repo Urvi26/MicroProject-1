@@ -26,22 +26,23 @@ LCD_hex_tmp:	ds 1    ; reserve 1 byte for variable LCD_hex_tmp
 	
 psect	data
 	
-Time_Message:	
+Time_Message:		;message to display 'Time:'
     db	    'T', 'i', 'm', 'e', ':', ' ', 0x0a
     
-    Time_Message_l  EQU	7
+    Time_Message_l  EQU	7   ; 'Time:' message length
     align   2
     
-Temp_Message:	
+Temp_Message:		;message to display 'Temp:'
     db	    'T', 'e', 'm', 'p', ':', ' ', 0x0a
     
-    Temp_Message_l  EQU	7
+    Temp_Message_l  EQU	7 ;'Temp:' message length
     align   2
 
 psect	lcd_code,class=CODE
-LCD_Clear: movlw	00000001B	; display clear
-	   call	LCD_Send_Byte_I
-	   return	
+LCD_Clear: 
+	movlw	00000001B	; display clear
+	call	LCD_Send_Byte_I
+	return	
 	   
 LCD_Setup:
 	clrf    LATB, A
@@ -61,7 +62,7 @@ LCD_Setup:
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
-	movlw	00001100B	; display on, cursor on, blinking on
+	movlw	00001100B	; display on, cursor off, blinking of
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
@@ -78,13 +79,13 @@ LCD_Setup:
 	bsf	EEPGD
 	return
 
-LCD_Write_Character:
+LCD_Write_Character:	;send ascii code to LCD to display character
 	call	LCD_Send_Byte_D
 	movlw	10
 	call	delay
 	return	
 	
-LCD_Set_Position:	    
+LCD_Set_Position:	;set position at which inputs will be displayed  
 	call    LCD_Send_Byte_I
 	movlw   10		; wait 40us
 	call    LCD_delay_x4us
