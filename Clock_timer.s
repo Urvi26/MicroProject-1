@@ -1,7 +1,7 @@
 #include <xc.inc>
 	
-extrn	Write_Decimal_LCD, LCD_Clear, LCD_Write_Character, LCD_Write_Hex
-extrn	LCD_Set_Position, LCD_Write_Time, LCD_Write_Temp, Keypad, LCD_Send_Byte_I
+extrn	Write_Decimal_LCD, LCD_Clear, LCD_Write_Character, LCD_Write_Hex, operation_check
+extrn	LCD_Set_Position, LCD_Write_Time, LCD_Write_Temp, Keypad, LCD_Send_Byte_I, LCD_Send_Byte_D, keypad_val, keypad_ascii
 global	Clock, Clock_Setup, operation
     
 psect	udata_acs
@@ -13,6 +13,7 @@ check_24:	ds  1	;reserving byte to store decimal 24 in hex
     
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h:	ds 1	; reserve 1 byte for variable LCD_cnt_h
+LCD_cnt_ms:	ds 1	; reserve 1 byte for ms counter
     
 clock_flag:	ds  1
 hour_1:	ds 1
@@ -36,7 +37,7 @@ temporary_hrs: ds 1
 temporary_min: ds 1
 temporary_sec: ds 1
 skip_byte: ds 1
-   
+    
 	
     
 psect	Clock_timer_code, class=CODE
@@ -74,6 +75,7 @@ Clock:
 	btfss	TMR0IF		; check that this is timer0 interrupt
 	retfie	f		; if not then return
 	call	clock_inc	; increment clock time
+	btfss	operation_check, 0 ;skip rewrite clock if = 1
 	call	rewrite_clock	;write and display clock time as decimal on LCD  
 	movlw	0x0B		;setting upper byte timer start value
 	movwf	TMR0H, A	
@@ -146,7 +148,8 @@ check_cancel:
 	
 	
 set_time: 
-	call LCD_Clear
+	movlw	11000000B	    ;set cursor to first line
+	call	LCD_Set_Position
 	movlw	00001111B
 	call    LCD_Send_Byte_I
 	clrf	set_time_hrs1
@@ -159,62 +162,62 @@ set_time1:
 	call input_check	  
 	
 	CPFSEQ	hex_C
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	return
 	CPFSEQ	hex_E
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_set_time
 	movff	keypad_val, set_time_hrs1
 	call delay
 set_time2:
 	call input_check	  
 	
 	CPFSEQ	hex_C
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	return
 	CPFSEQ	hex_E
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_set_time
 	movff	keypad_val, set_time_hrs2
 	call delay
 set_time3:
 	call input_check	  
 	
 	CPFSEQ	hex_C
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	return
 	CPFSEQ	hex_E
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_set_time
 	movff	keypad_val, set_time_min1
 	call delay
 set_time4:
 	call input_check	  
 	
 	CPFSEQ	hex_C
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	return
 	CPFSEQ	hex_E
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call	write_set_time
 	movff	keypad_val, set_time_min2
 	call delay
 set_time5:
 	call input_check	  
 	
 	CPFSEQ	hex_C
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	return
 	CPFSEQ	hex_E
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	bra	enter_time
 	
 	call set_time_write
@@ -224,16 +227,25 @@ set_time6:
 	call input_check	  
 	
 	CPFSEQ	hex_C
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	return
 	CPFSEQ	hex_E
-	btfsc	skip_byte
+	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_set_time
 	movff	keypad_val, set_time_sec2
 	call delay
 
+check_enter:
+	CPFSEQ	hex_C
+	btfsc	skip_byte, 0
+	return
+	CPFSEQ	hex_E
+	btfsc	skip_byte, 0
+	bra	enter_time
+	bra	check_enter
+	
 enter_time:
 	call input_into_clock
 	
@@ -263,8 +275,34 @@ keypad_input_F:
 	bra input_check
 	
 	
+write_set_time:
+    	movlw	10000000B	    ;set cursor to first line
+	call	LCD_Set_Position
+	call	LCD_Write_Time	    ;write 'Time: ' to LCD
+	movf	set_time_hrs1, W
+	call	LCD_Send_Byte_D
+	movf	set_time_hrs2, W
+	call	LCD_Send_Byte_D
+	movlw	0x3A		    ;write ':' to LCD
+	call	LCD_Write_Character 
+	movf	set_time_min1, W
+	call	LCD_Send_Byte_D
+	movf	set_time_min2, W
+	call	LCD_Send_Byte_D
+	movlw	0x3A		    ;write ':' to LCD
+	call	LCD_Write_Character
+	movf	set_time_sec1, W
+	call	LCD_Send_Byte_D
+	movf	set_time_sec2, W
+	call	LCD_Send_Byte_D
+	movlw	11000000B	    ;set cursor to first line
+	call	LCD_Set_Position
+	call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
+				    ;Here will write temperature to LCD
+	return
+	
 set_time_write:
-	movf	keypad_char, W
+	movf	keypad_ascii, W
 	call	LCD_Write_Character
 	return
     
@@ -334,10 +372,28 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	bc 	lcdlp1		; carry, then loop again
 	return		
 	
+; ** a few delay routines below here as LCD timing can be quite critical ****
+LCD_delay_ms:		    ; delay given in ms in W
+	movwf	LCD_cnt_ms, A
+lcdlp2:	movlw	250	    ; 1 ms delay
+	call	LCD_delay_x4us	
+	decfsz	LCD_cnt_ms, A
+	bra	lcdlp2
+	return	
+	
+	
 delay:	
-	movlw	0xf0
-	call	LCD_delay_x4us
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
 	return
+	
+	
 
     
     end

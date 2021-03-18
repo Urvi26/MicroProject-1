@@ -1,6 +1,6 @@
   #include<xc.inc>
 
-global	Keypad
+global	Keypad, keypad_val, keypad_ascii
 psect	udata_acs   ; named variables in access ram
 col_input:	ds 1	; reserve 1 byte for variable Col_input
 row_input:  ds 1
@@ -54,12 +54,11 @@ check_null:
 	movlw	11111111B
 	CPFSEQ	keypad_input
 	bra check1
-	movlw	0xff	
-	movwf	keypad_char, A
+	movlw	0xff
+	movwf	keypad_val, A	
 	movlw	0x00	;ascii for null
 	movwf	keypad_ascii
 	return
-
 check1:	movlw	11101110B	;move keypad value expected from 1 button into W
     	CPFSEQ	keypad_input	;check if keypad output equal to 1 expected output
 	bra check2		;branch to next check if not equal
@@ -209,7 +208,8 @@ null:	movlw	0x00
 	movlw	0xff
 	movwf	keypad_val
 	return
-
+	
+	
 delay:	decfsz	delay_val
 	bra delay
 	return

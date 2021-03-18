@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D
+global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
 global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble, UART_Transmit_Message
 global	LCD_Write_Time, LCD_Write_Temp
 
