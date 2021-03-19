@@ -16,10 +16,11 @@
       <itemPath>config.s</itemPath>
       <itemPath>LCD.s</itemPath>
       <itemPath>Keypad.s</itemPath>
-      <itemPath>Hex_to_Dec.s</itemPath>
       <itemPath>Clock_timer.s</itemPath>
       <itemPath>UART.s</itemPath>
       <itemPath>Set_Alarm_and_Time.s</itemPath>
+      <itemPath>Operations.s</itemPath>
+      <itemPath>Decimal_Display.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

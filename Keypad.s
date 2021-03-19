@@ -2,6 +2,8 @@
     #include<xc.inc>
 
 global	Keypad, keypad_val, keypad_ascii
+
+extrn	LCD_delay_x4us
     
 psect	udata_acs   ; named variables in access ram
 col_input:	ds 1	; reserve 1 byte for variable Col_input
@@ -212,8 +214,11 @@ null:	movlw	0x00
 	return
 	
 	
-delay_keypad:	decfsz	delay_val
-	bra delay_keypad
+delay_keypad:	
+	movlw	0x10
+	call	LCD_delay_x4us
+	;decfsz	delay_val
+	;bra delay_keypad
 	return
 
 	end 
