@@ -1,12 +1,13 @@
-  #include<xc.inc>
+
+    #include<xc.inc>
 
 global	Keypad, keypad_val, keypad_ascii
+    
 psect	udata_acs   ; named variables in access ram
 col_input:	ds 1	; reserve 1 byte for variable Col_input
 row_input:  ds 1
 keypad_input: ds 1
 delay_val: ds 1
-keypad_char: ds 1 
 keypad_ascii: ds 1
 keypad_val: ds 1
  
@@ -18,13 +19,13 @@ Keypad:
 	    ;trigger and read column input;
 	movlw	0x0f
 	movwf	TRISE	;set E0-E3 as input and E4-E7 as output
-	call delay
+	call delay_keypad
 	movff	PORTE, col_input    ;store column input in col_input
 	
 	    ;trigger and read row input;
 	movlw	0xf0
 	movwf	TRISE	;set E4-7 as input, E0-E3 as output
-	call	delay
+	call	delay_keypad
 	movff	PORTE, row_input    ;store row input in row_input
 	
 	    ;add row and column input;
@@ -43,10 +44,10 @@ Keypad_Setup:
 	banksel	PADCFG1	; selecting bank register
 	bsf REPU	; setting PORTE pull-ups on
 	movlb	0x00	;setting bank register back to 0
-	call delay
+	call delay_keypad
 	
 	clrf	LATE	;clear LATE
-	call delay
+	call delay_keypad
 	return
 	
 check:	
@@ -211,8 +212,8 @@ null:	movlw	0x00
 	return
 	
 	
-delay:	decfsz	delay_val
-	bra delay
+delay_keypad:	decfsz	delay_val
+	bra delay_keypad
 	return
 
 	end 

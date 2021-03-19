@@ -1,7 +1,8 @@
 #include <xc.inc>
 
-extrn	Clock_Setup, Clock, LCD_Setup, LCD_Write_Character, LCD_Clear, LCD_Set_Position, Keypad, operation
-extrn  UART_Setup, UART_Transmit_Message, keypad_val, keypad_ascii
+extrn	Clock_Setup, Clock, operation
+extrn	LCD_Setup
+extrn	Keypad, keypad_val, keypad_ascii
   
 global	operation_check
     
@@ -18,7 +19,6 @@ int_hi:	org	0x0008	; high vector, no low vector
 	goto	Clock
 	
 start:
-	call	UART_Setup
 	call	LCD_Setup
 	call	Clock_Setup
 	

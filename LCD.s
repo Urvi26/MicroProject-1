@@ -1,10 +1,8 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
-global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble, UART_Transmit_Message
-global	LCD_Write_Time, LCD_Write_Temp
-
-extrn	UART_Setup
+global  LCD_Setup, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
+global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble
+global	LCD_Write_Time, LCD_Write_Temp, LCD_delay_ms, LCD_delay_x4us
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -12,12 +10,12 @@ LCD_cnt_h:	ds 1	; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms:	ds 1	; reserve 1 byte for ms counter
 LCD_tmp:	ds 1	; reserve 1 byte for temporary use
 LCD_counter:	ds 1	; reserve 1 byte for counting through nessage
-counter1:	ds  1
-counter2:	ds  1
+counter_Time:	ds  1
+counter_Temp:	ds  1
     
 psect	udata_bank4
-myArray1:    ds 0x80
-myArray2:    ds 0x80
+myArrayTime:    ds 0x80
+myArrayTemp:    ds 0x80
 
 PSECT	udata_acs_ovr,space=1,ovrld,class=COMRAM
 LCD_hex_tmp:	ds 1    ; reserve 1 byte for variable LCD_hex_tmp
@@ -38,6 +36,7 @@ Temp_Message:		;message to display 'Temp:'
     
     Temp_Message_l  EQU	7 ;'Temp:' message length
     align   2
+    
 
 psect	lcd_code,class=CODE
 LCD_Clear: 
@@ -75,9 +74,6 @@ LCD_Setup:
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
-	
-	bcf	CFGS
-	bsf	EEPGD
 	return
 
 LCD_Write_Character:	;send ascii code to LCD to display character
@@ -121,50 +117,6 @@ LCD_Write_High_Nibble:
 	call	LCD_Hex_Nib
 	return
 	
-LCD_Write_Time:
-	lfsr	0, myArray1
-	movlw	low highword(Time_Message)
-	movwf	TBLPTRU, A
-	movlw	high(Time_Message)
-	movwf	TBLPTRH, A
-	movlw	low(Time_Message)
-	movwf	TBLPTRL, A
-	movlw	Time_Message_l
-	movwf	counter1, A
-loop1:	tblrd*+
-	movff	TABLAT, POSTINC0
-	decfsz	counter1, A
-	bra loop1
-	
-	movlw	Time_Message_l
-	lfsr	2, myArray1
-	
-	movlw	Time_Message_l-1
-	call	LCD_Write_Message
-	return
-	
-LCD_Write_Temp:
-	lfsr	0, myArray2
-	movlw	low highword(Temp_Message)
-	movwf	TBLPTRU, A
-	movlw	high(Temp_Message)
-	movwf	TBLPTRH, A
-	movlw	low(Temp_Message)
-	movwf	TBLPTRL, A
-	movlw	Temp_Message_l
-	movwf	counter2, A
-loop2:	tblrd*+
-	movff	TABLAT, POSTINC0
-	decfsz	counter2, A
-	bra loop2
-	
-	movlw	Temp_Message_l
-	lfsr	2, myArray2
-	
-	movlw	Temp_Message_l-1
-	call	LCD_Write_Message
-	return
-	
 	
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter, A
@@ -174,6 +126,51 @@ LCD_Loop_message:
 	decfsz  LCD_counter, A
 	bra	LCD_Loop_message
 	return
+	
+LCD_Write_Time:
+	lfsr	0, myArrayTime
+	movlw	low highword(Time_Message)
+	movwf	TBLPTRU, A
+	movlw	high(Time_Message)
+	movwf	TBLPTRH, A
+	movlw	low(Time_Message)
+	movwf	TBLPTRL, A
+	movlw	Time_Message_l
+	movwf	counter_Time, A
+loop1:	tblrd*+
+	movff	TABLAT, POSTINC0
+	decfsz	counter_Time, A
+	bra loop1
+	
+	movlw	Time_Message_l
+	lfsr	2, myArrayTime
+	
+	movlw	Time_Message_l-1
+	call	LCD_Write_Message
+	return
+	
+LCD_Write_Temp:
+	lfsr	0, myArrayTemp
+	movlw	low highword(Temp_Message)
+	movwf	TBLPTRU, A
+	movlw	high(Temp_Message)
+	movwf	TBLPTRH, A
+	movlw	low(Temp_Message)
+	movwf	TBLPTRL, A
+	movlw	Temp_Message_l
+	movwf	counter_Temp, A
+loop2:	tblrd*+
+	movff	TABLAT, POSTINC0
+	decfsz	counter_Temp, A
+	bra loop2
+	
+	movlw	Temp_Message_l
+	lfsr	2, myArrayTemp
+	
+	movlw	Temp_Message_l-1
+	call	LCD_Write_Message
+	return
+
 
 LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
 	movwf   LCD_tmp, A

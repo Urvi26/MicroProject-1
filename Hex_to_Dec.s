@@ -48,8 +48,8 @@ Write_Decimal_LCD:
 	movlw	0x0A	    ;move dec 10 to ein (eight bit input)
 	movwf	ein    
 	
-	movf	seouth, W   ;move remaining result of time x 0x28f6  multiplication into inputs
-	andwf	0x0f	    ;setting first digit of seouth to 0
+	movlw	0x0f  ;move remaining result of time x 0x28f6  multiplication into inputs
+	andwf	seouth, 0, 1	    ;setting first digit of seouth to 0
 	movwf	tinh	    ;and move to input
 	movff	seoutm, tinm
 	movff	seoutl, tinl
@@ -61,8 +61,8 @@ Write_Decimal_LCD:
 	
 	;third multiplication;
 	;preparing inputs for multiplication
-	movf	teouth, W	    
-	andlw	0x0f		;setting first digit of second multiplication to 0
+	movlw	0x0f	    
+	andwf   teouth, 0, 1		;setting first digit of second multiplication to 0
 	movwf	tinh		
 	movff	teoutl, tinm
 	movff	teoutll, tinl
