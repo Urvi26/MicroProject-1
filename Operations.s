@@ -1,6 +1,6 @@
 #include <xc.inc>
 	
-extrn	Write_Decimal_to_LCD, operation_check, LCD_Write_Hex
+extrn	Write_Decimal_to_LCD, operation_check, LCD_Write_Hex, LCD_Write_High_Nibble
 extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_Clear, LCD_delay_ms
 extrn	Keypad, keypad_val, keypad_ascii
 extrn	check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, delay, rewrite_clock
@@ -72,6 +72,7 @@ check_set_time:
 check_cancel:
 	CPFSEQ	hex_C
 	bra	check_keypad   
+	bcf operation_check, 0
 	return		;clear LCD and return if cancel is pressed	
 
 set_alarm:
@@ -206,8 +207,14 @@ set_time6:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call	write_keypad_val
+	;movf	set_time_sec1, W
+	;call	LCD_Write_Hex
+	
+	call write_keypad_val
 	movff	keypad_val, set_time_sec2
+	
+	;movf	set_time_sec1, W
+	;call	LCD_Write_Hex
 	
 	movlw	00001100B
 	call    LCD_Send_Byte_I
@@ -236,8 +243,6 @@ cancel:
 	call    LCD_Send_Byte_I
 	
 	bcf	operation_check, 0
-	;bcf	alarm, 0
-	
 	return
 	
 delete:
@@ -264,10 +269,6 @@ keypad_input_B:
 	CPFSEQ	hex_B
 	bra keypad_input_F
 	bra input_check
-;keypad_input_D:
-;	CPFSEQ	hex_D
-;	bra keypad_input_F
-;	bra input_check
 keypad_input_F:
 	CPFSEQ	hex_F
 	return
@@ -327,7 +328,7 @@ input_into_clock:
 	movff	temporary_min, clock_min
 	movff	temporary_sec, clock_sec
 	bcf	operation_check, 0
-	;call	rewrite_clock	
+	call	rewrite_clock	
 	return
 
 input_into_alarm:
