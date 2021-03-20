@@ -1,6 +1,6 @@
 #include <xc.inc>
 	
-extrn	Write_Decimal_to_LCD, operation_check, LCD_Write_Hex, LCD_Write_High_Nibble
+extrn	Write_Decimal_to_LCD, operation_check, LCD_Write_Hex, LCD_Write_Low_Nibble
 extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_Clear, LCD_delay_ms
 extrn	Keypad, keypad_val, keypad_ascii
 extrn	check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, delay, rewrite_clock
@@ -193,7 +193,11 @@ set_time5:
 	bra	enter_time
 	
 	call write_keypad_val
-	movff	keypad_val, set_time_sec1
+	movff	keypad_val, 0x20    
+;for some reason, if i move keypad_val to set_time_sec1 here, set_time_sec1;
+; gets cleared by line 208 so i am moving to 0x20 and then moving;
+;from 0x20 to set_time_sec1 after line 208;
+
 set_time6:
 	call input_check	  
 	
@@ -207,14 +211,10 @@ set_time6:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	;movf	set_time_sec1, W
-	;call	LCD_Write_Hex
-	
 	call write_keypad_val
 	movff	keypad_val, set_time_sec2
 	
-	;movf	set_time_sec1, W
-	;call	LCD_Write_Hex
+	movff	0x20, set_time_sec1
 	
 	movlw	00001100B
 	call    LCD_Send_Byte_I
