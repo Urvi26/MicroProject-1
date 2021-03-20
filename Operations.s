@@ -197,8 +197,8 @@ set_time5:
 	
 	call write_keypad_val
 	movff	keypad_val, 0x20    
-;for some reason, if i move keypad_val to set_time_sec1 here, set_time_sec1;
-; gets cleared by line 215 so i am moving to 0x20 and then moving;
+;for some reason, if i move keypad_val to set_time_sec1 here, set_time_sec1
+; gets cleared by line 215 so i am moving to 0x20 and then moving
 ;from 0x20 to set_time_sec1 after line 215;
 
 set_time6:
