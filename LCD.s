@@ -2,7 +2,7 @@
 
 global  LCD_Setup, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
 global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble
-global	LCD_Write_Time, LCD_Write_Temp, LCD_delay_ms, LCD_delay_x4us
+global	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm, LCD_delay_ms, LCD_delay_x4us
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -12,10 +12,14 @@ LCD_tmp:	ds 1	; reserve 1 byte for temporary use
 LCD_counter:	ds 1	; reserve 1 byte for counting through nessage
 counter_Time:	ds  1
 counter_Temp:	ds  1
+counter_Alarm:	ds  1
     
 psect	udata_bank4
 myArrayTime:    ds 0x80
 myArrayTemp:    ds 0x80
+    
+psect	udata_bank5
+myArrayAlarm:    ds 0x80
 
 PSECT	udata_acs_ovr,space=1,ovrld,class=COMRAM
 LCD_hex_tmp:	ds 1    ; reserve 1 byte for variable LCD_hex_tmp
@@ -35,6 +39,12 @@ Temp_Message:		;message to display 'Temp:'
     db	    'T', 'e', 'm', 'p', ':', ' ', 0x0a
     
     Temp_Message_l  EQU	7 ;'Temp:' message length
+    align   2
+    
+Alarm_Message:		;message to display 'Temp:'
+    db	    'A', 'l', 'a', 'r', 'm', ':', ' ', 0x0a
+    
+    Alarm_Message_l  EQU	8 ;'Temp:' message length
     align   2
     
 
@@ -137,10 +147,10 @@ LCD_Write_Time:
 	movwf	TBLPTRL, A
 	movlw	Time_Message_l
 	movwf	counter_Time, A
-loop1:	tblrd*+
+loop_Time:	tblrd*+
 	movff	TABLAT, POSTINC0
 	decfsz	counter_Time, A
-	bra loop1
+	bra loop_Time
 	
 	movlw	Time_Message_l
 	lfsr	2, myArrayTime
@@ -159,15 +169,37 @@ LCD_Write_Temp:
 	movwf	TBLPTRL, A
 	movlw	Temp_Message_l
 	movwf	counter_Temp, A
-loop2:	tblrd*+
+loop_Temp:	tblrd*+
 	movff	TABLAT, POSTINC0
 	decfsz	counter_Temp, A
-	bra loop2
+	bra loop_Temp
 	
 	movlw	Temp_Message_l
 	lfsr	2, myArrayTemp
 	
 	movlw	Temp_Message_l-1
+	call	LCD_Write_Message
+	return
+	
+LCD_Write_Alarm:
+	lfsr	0, myArrayAlarm
+	movlw	low highword(Alarm_Message)
+	movwf	TBLPTRU, A
+	movlw	high(Alarm_Message)
+	movwf	TBLPTRH, A
+	movlw	low(Alarm_Message)
+	movwf	TBLPTRL, A
+	movlw	Alarm_Message_l
+	movwf	counter_Alarm, A
+loop_Alarm:	tblrd*+
+	movff	TABLAT, POSTINC0
+	decfsz	counter_Alarm, A
+	bra loop_Alarm
+	
+	movlw	Alarm_Message_l
+	lfsr	2, myArrayAlarm
+	
+	movlw	Alarm_Message_l-1
 	call	LCD_Write_Message
 	return
 

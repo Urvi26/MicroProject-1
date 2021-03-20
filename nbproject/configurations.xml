@@ -17,8 +17,6 @@
       <itemPath>LCD.s</itemPath>
       <itemPath>Keypad.s</itemPath>
       <itemPath>Clock_timer.s</itemPath>
-      <itemPath>UART.s</itemPath>
-      <itemPath>Set_Alarm_and_Time.s</itemPath>
       <itemPath>Operations.s</itemPath>
       <itemPath>Decimal_Display.s</itemPath>
     </logicalFolder>
