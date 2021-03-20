@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-extrn	Clock_Setup, Cloc
+extrn	Clock_Setup, Clock
 extrn	operation
 extrn	LCD_Setup
 extrn	Keypad, keypad_val, keypad_ascii
