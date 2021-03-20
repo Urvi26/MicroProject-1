@@ -243,6 +243,7 @@ cancel:
 	call    LCD_Send_Byte_I
 	
 	bcf	operation_check, 0
+	call rewrite_clock
 	return
 	
 delete:
