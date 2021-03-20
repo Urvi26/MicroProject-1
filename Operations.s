@@ -212,9 +212,6 @@ set_time6:
 	
 	call write_keypad_val
 	movff	keypad_val, set_time_sec2
-
-	movlw	00001100B
-	call    LCD_Send_Byte_I
 check_enter:
 	call input_check	  
 	
@@ -226,6 +223,9 @@ check_enter:
 	bra	delete
 	CPFSEQ	hex_E
 	bra	check_enter
+	
+	movlw	00001100B
+	call    LCD_Send_Byte_I
 	bra	enter_time
 	
 enter_time:
