@@ -359,7 +359,7 @@ output_error:
     call	LCD_Write_Character	;write 'r'  
     movlw	0xff
     call	LCD_delay_ms
-    
+    bcf		operation_check, 0
     return
 
 write_time:				    ;write the words 'time:' before displaying the time
