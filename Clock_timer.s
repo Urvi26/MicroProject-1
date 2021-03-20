@@ -100,7 +100,7 @@ Clock:
 	retfie	f		; fast return from interrupt	
 	
 compare_alarm:
-	btfsc	alarm_on, 0
+	btfss	alarm_on, 0
 	return
 	movf	alarm_hrs, W
 	CPFSEQ	clock_hrs
