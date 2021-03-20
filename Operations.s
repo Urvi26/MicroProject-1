@@ -196,11 +196,7 @@ set_time5:
 	bra	enter_time
 	
 	call write_keypad_val
-	movff	keypad_val, 0x20    
-;for some reason, if i move keypad_val to set_time_sec1 here, set_time_sec1
-; gets cleared by line 215 so i am moving to 0x20 and then moving
-;from 0x20 to set_time_sec1 after line 215;
-
+	movff	keypad_val, set_time_sec1
 set_time6:
 	call input_check	  
 	
@@ -216,7 +212,7 @@ set_time6:
 	
 	call write_keypad_val
 	movff	keypad_val, set_time_sec2
-	
+
 	movlw	00001100B
 	call    LCD_Send_Byte_I
 check_enter:
@@ -234,6 +230,7 @@ check_enter:
 	
 enter_time:
 	call delay
+	
 	bra input_sort
 	return
 	
@@ -293,7 +290,6 @@ write_keypad_val:
 	return
 
 input_sort:
-	movff	0x20, set_time_sec1
 	movf	set_time_hrs1, W
 	mullw	0x0A
 	movf	PRODL, W
@@ -329,7 +325,7 @@ input_into_clock:
 	movff	temporary_min, clock_min
 	movff	temporary_sec, clock_sec
 	bcf	operation_check, 0
-	call	rewrite_clock	
+	;call	rewrite_clock	
 	return
 
 input_into_alarm:
