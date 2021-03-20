@@ -1,11 +1,11 @@
 #include <xc.inc>
 	
 extrn	Write_Decimal_to_LCD
-extrn	operation_check
+extrn	operation_check, alarm_on
 extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_delay_ms, LCD_Clear, LCD_Send_Byte_D
 extrn	Keypad, keypad_val, keypad_ascii
 extrn	write_alarm, write_time
-global	clock, clock_setup, delay, check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, rewrite_clock
+global	Clock, Clock_setup, delay, check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, rewrite_clock
     
 psect	udata_acs   
 	
@@ -21,7 +21,7 @@ check_24:	ds  1
 
     psect	Clock_timer_code, class=CODE
 	
-clock_setup: 
+Clock_setup: 
 	movlw  0x00
 	movwf   clock_sec
 	movwf   clock_min
@@ -47,7 +47,7 @@ clock_setup:
 	
 	return	
 
-clock:	
+Clock:	
 	btfss	TMR0IF		; check that this is timer0 interrupt
 	retfie	f		; if not then return
 	movlw	0x0B
@@ -62,6 +62,8 @@ clock:
 	retfie	f		; fast return from interrupt
 
 compare_alarm:
+	btfsc	alarm_on, 0
+	return
 	movf	alarm_hrs, W
 	CPFSEQ	clock_hrs
 	return
@@ -83,25 +85,6 @@ buzzer:
 	call delay
 	call	LCD_Clear
 	return
-	
-clock_inc:	
-	incf	clock_sec   ;increment clock_sec
-	movf	clock_sec, W	
-	cpfseq	check_60    ;check if clock_sec is equal to 60
-	return		    ;return if it isn't equal
-	clrf	clock_sec   ;if it is equal, set to 0
-	incf	clock_min   ;and increment clock_min
-	movf	clock_min, W	
-	cpfseq	check_60    ;check if clock_min is equal to 60
-	return		    ;return if clock_min is not equal to 60
-	clrf	clock_min   ;if it is equal to 60, set to 0
-	incf	clock_hrs   ;and increment clock_hrs
-	movf	clock_hrs, W	
-	cpfseq	check_24    ;check if clock_hrs is equal to 24
-	return		    ;return if it isn't
-	clrf	clock_hrs   ;if it is equal, then set to 0
-	return		    ; and return
-
 rewrite_clock: 
 	call write_time
 	
@@ -128,6 +111,24 @@ rewrite_clock:
 	movf	clock_sec, W
 	call Write_Decimal_to_LCD	    ;write seconds
 	return
+	
+clock_inc:	
+	incf	clock_sec   ;increment clock_sec
+	movf	clock_sec, W	
+	cpfseq	check_60    ;check if clock_sec is equal to 60
+	return		    ;return if it isn't equal
+	clrf	clock_sec   ;if it is equal, set to 0
+	incf	clock_min   ;and increment clock_min
+	movf	clock_min, W	
+	cpfseq	check_60    ;check if clock_min is equal to 60
+	return		    ;return if clock_min is not equal to 60
+	clrf	clock_min   ;if it is equal to 60, set to 0
+	incf	clock_hrs   ;and increment clock_hrs
+	movf	clock_hrs, W	
+	cpfseq	check_24    ;check if clock_hrs is equal to 24
+	return		    ;return if it isn't
+	clrf	clock_hrs   ;if it is equal, then set to 0
+	return		    ; and return
 
 delay: movlw	0x40
 	call LCD_delay_ms
