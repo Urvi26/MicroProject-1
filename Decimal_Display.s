@@ -23,11 +23,11 @@ input_24_m:ds 1	;24x8, 24 bit number middle byte input
 input_24_u:ds 1	;24x8, 24 bit number high byte input
 input_8_f24:ds 1	;24x8, 8 bit number input
 
-output_24x8_l:ds 1	;24x8, low byte output
+output_24x8_l:	ds 1	;24x8, low byte output
 output_24x8_ul:	ds 1	;24x8, second lowest byte output
 output_24x8_lu:	ds 1	;24x8, second highest byte output
-output_24x8_u:ds 1	;24x8, high byte output
-output_24x8_i:ds 1	;24x8, intermediate used while multiplying
+output_24x8_u:	ds 1	;24x8, high byte output
+output_24x8_i:	ds 1	;24x8, intermediate used while multiplying
 
 psect	Decimal_Display_code,class=CODE
     
