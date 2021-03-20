@@ -94,7 +94,7 @@ set_alarm:
 set_time: 
 	movlw	00001111B
 	call    LCD_Send_Byte_I
-	call delay
+	call	delay
 	
 	call	Display_zeros
 	
@@ -206,7 +206,7 @@ set_time6:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call write_keypad_val
+	call	write_keypad_val
 	movff	keypad_val, set_time_sec2
 	
 	movlw	00001100B
@@ -326,7 +326,8 @@ input_into_clock:
 	movff	temporary_hrs, clock_hrs
 	movff	temporary_min, clock_min
 	movff	temporary_sec, clock_sec
-	call	rewrite_clock		
+	bcf	operation_check, 0
+	;call	rewrite_clock	
 	return
 
 input_into_alarm:
@@ -341,6 +342,9 @@ input_into_alarm:
 output_error:
     call	LCD_Clear
     call delay
+    movlw	00001100B
+    call    LCD_Send_Byte_I
+    call    delay
     movlw	10000000B
     call	LCD_Set_Position	    ;set position in LCD to first line, first character
     movlw	0x45
@@ -355,7 +359,7 @@ output_error:
     call	LCD_Write_Character	;write 'r'  
     movlw	0xff
     call	LCD_delay_ms
-    call	LCD_Clear
+    
     return
 
 write_time:				    ;write the words 'time:' before displaying the time
