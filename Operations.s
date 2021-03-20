@@ -329,7 +329,7 @@ input_into_alarm:
 	movff	temporary_sec, alarm_sec
 	call	LCD_Clear
 	bsf	alarm_on, 0
-	bcf operation_check, 0
+	bcf	operation_check, 0
 	;call	rewrite_clock
 	return
 

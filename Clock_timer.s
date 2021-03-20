@@ -56,13 +56,13 @@ Clock:
 	movwf	TMR0L, A
 	bcf	TMR0IF		; clear interrupt flag
 	call	clock_inc	; increment PORTJ 
-	call compare_alarm
+	call	compare_alarm
 	btfss	operation_check, 0
 	call	rewrite_clock
 	retfie	f		; fast return from interrupt
 
 compare_alarm:
-	btfsc	alarm_on, 0
+	btfss	alarm_on, 0
 	return
 	movf	alarm_hrs, W
 	CPFSEQ	clock_hrs
@@ -77,6 +77,8 @@ compare_alarm:
 	return
 buzzer:
 	call LCD_Clear
+	call delay
+	call delay
 	call delay
 	call write_alarm
 	call delay
