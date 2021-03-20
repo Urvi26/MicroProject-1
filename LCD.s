@@ -1,8 +1,6 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
-global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble
-global	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm, LCD_delay_ms, LCD_delay_x4us
+global  LCD_Setup, LCD_Set_Position, LCD_Write_Character, LCD_Clear, LCD_Write_High_Nibble, LCD_Send_Byte_I, LCD_delay_x4us, LCD_delay_ms
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -10,49 +8,17 @@ LCD_cnt_h:	ds 1	; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms:	ds 1	; reserve 1 byte for ms counter
 LCD_tmp:	ds 1	; reserve 1 byte for temporary use
 LCD_counter:	ds 1	; reserve 1 byte for counting through nessage
-counter_Time:	ds  1
-counter_Temp:	ds  1
-counter_Alarm:	ds  1
-    
-psect	udata_bank4
-myArrayTime:    ds 0x80
-myArrayTemp:    ds 0x80
-    
-psect	udata_bank5
-myArrayAlarm:    ds 0x80
 
 PSECT	udata_acs_ovr,space=1,ovrld,class=COMRAM
 LCD_hex_tmp:	ds 1    ; reserve 1 byte for variable LCD_hex_tmp
 
 	LCD_E	EQU 5	; LCD enable bit
     	LCD_RS	EQU 4	; LCD register select bit
-	
-psect	data
-	
-Time_Message:		;message to display 'Time:'
-    db	    'T', 'i', 'm', 'e', ':', ' ', 0x0a
-    
-    Time_Message_l  EQU	7   ; 'Time:' message length
-    align   2
-    
-Temp_Message:		;message to display 'Temp:'
-    db	    'T', 'e', 'm', 'p', ':', ' ', 0x0a
-    
-    Temp_Message_l  EQU	7 ;'Temp:' message length
-    align   2
-    
-Alarm_Message:		;message to display 'Temp:'
-    db	    'A', 'l', 'a', 'r', 'm', ':', ' ', 0x0a
-    
-    Alarm_Message_l  EQU	8 ;'Temp:' message length
-    align   2
-    
 
 psect	lcd_code,class=CODE
-LCD_Clear: 
-	movlw	00000001B	; display clear
-	call	LCD_Send_Byte_I
-	return	
+LCD_Clear: movlw	00000001B	; display clear
+	   call	LCD_Send_Byte_I
+	   return	
 	   
 LCD_Setup:
 	clrf    LATB, A
@@ -72,7 +38,7 @@ LCD_Setup:
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
-	movlw	00001100B	; display on, cursor off, blinking ofF
+	movlw	00001100B	; display on, cursor off, blinking off
 	call	LCD_Send_Byte_I
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
@@ -86,17 +52,17 @@ LCD_Setup:
 	call	LCD_delay_x4us
 	return
 
-LCD_Write_Character:	;send ascii code to LCD to display character
+LCD_Write_Character:
 	call	LCD_Send_Byte_D
-	movlw	10	    ; delay 40us
-	call	LCD_delay_x4us
+	movlw	10
+	call	delay
 	return	
 	
-LCD_Set_Position:	;set position at which inputs will be displayed  
-	call    LCD_Send_Byte_I
-	movlw   10		; wait 40us
-	call    LCD_delay_x4us
-	return
+LCD_Set_Position:	    
+	    call    LCD_Send_Byte_I
+	    movlw   10		; wait 40us
+	    call    LCD_delay_x4us
+	    return
 	
 LCD_Write_Hex:			; Writes byte stored in W as hex
 	movwf	LCD_hex_tmp, A
@@ -127,7 +93,6 @@ LCD_Write_High_Nibble:
 	call	LCD_Hex_Nib
 	return
 	
-	
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter, A
 LCD_Loop_message:
@@ -136,73 +101,6 @@ LCD_Loop_message:
 	decfsz  LCD_counter, A
 	bra	LCD_Loop_message
 	return
-	
-LCD_Write_Time:
-	lfsr	0, myArrayTime
-	movlw	low highword(Time_Message)
-	movwf	TBLPTRU, A
-	movlw	high(Time_Message)
-	movwf	TBLPTRH, A
-	movlw	low(Time_Message)
-	movwf	TBLPTRL, A
-	movlw	Time_Message_l
-	movwf	counter_Time, A
-loop_Time:	tblrd*+
-	movff	TABLAT, POSTINC0
-	decfsz	counter_Time, A
-	bra loop_Time
-	
-	movlw	Time_Message_l
-	lfsr	2, myArrayTime
-	
-	movlw	Time_Message_l-1
-	call	LCD_Write_Message
-	return
-	
-LCD_Write_Temp:
-	lfsr	0, myArrayTemp
-	movlw	low highword(Temp_Message)
-	movwf	TBLPTRU, A
-	movlw	high(Temp_Message)
-	movwf	TBLPTRH, A
-	movlw	low(Temp_Message)
-	movwf	TBLPTRL, A
-	movlw	Temp_Message_l
-	movwf	counter_Temp, A
-loop_Temp:	tblrd*+
-	movff	TABLAT, POSTINC0
-	decfsz	counter_Temp, A
-	bra loop_Temp
-	
-	movlw	Temp_Message_l
-	lfsr	2, myArrayTemp
-	
-	movlw	Temp_Message_l-1
-	call	LCD_Write_Message
-	return
-	
-LCD_Write_Alarm:
-	lfsr	0, myArrayAlarm
-	movlw	low highword(Alarm_Message)
-	movwf	TBLPTRU, A
-	movlw	high(Alarm_Message)
-	movwf	TBLPTRH, A
-	movlw	low(Alarm_Message)
-	movwf	TBLPTRL, A
-	movlw	Alarm_Message_l
-	movwf	counter_Alarm, A
-loop_Alarm:	tblrd*+
-	movff	TABLAT, POSTINC0
-	decfsz	counter_Alarm, A
-	bra loop_Alarm
-	
-	movlw	Alarm_Message_l
-	lfsr	2, myArrayAlarm
-	
-	movlw	Alarm_Message_l-1
-	call	LCD_Write_Message
-	return
-
 
 LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
 	movwf   LCD_tmp, A
@@ -296,5 +194,3 @@ delayc: decfsz	0x23
 	return
 
 end
-
-
