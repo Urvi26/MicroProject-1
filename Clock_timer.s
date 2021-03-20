@@ -4,7 +4,7 @@ extrn	Write_Decimal_to_LCD
 extrn	operation_check, alarm_on
 extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_delay_ms, LCD_Clear, LCD_Send_Byte_D
 extrn	Keypad, keypad_val, keypad_ascii
-extrn	write_alarm, write_time
+extrn	write_alarm, write_time, alarm_on
 global	Clock, Clock_setup, delay, check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, rewrite_clock
     
 psect	udata_acs   
@@ -45,6 +45,8 @@ Clock_setup:
 	movwf	TMR0L, A
 	bsf	TMR0IE		; Enable timer0 interrupt
 	bsf	GIE		; Enable all interrupts
+	
+	clrf	alarm_on, 0
 	
 	return	
 

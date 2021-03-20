@@ -47,7 +47,7 @@ setup:	movlw	0x0A
 	movwf	hex_F
 	movlw	0xff
 	movwf	hex_null
-	
+
 	clrf	skip_byte
 	return
     
@@ -111,6 +111,9 @@ set_time_clear:
 	movwf	set_time_min2
 	movwf	set_time_sec1
 	movwf	set_time_sec2
+	movwf	temporary_min
+	movwf	temporary_sec
+	movwf	temporary_hrs
 set_time1:	
 	call input_check
 	
@@ -214,8 +217,6 @@ set_time6:
 	call write_keypad_val
 	movff	keypad_val, set_time_sec2
 	
-	movff	0x20, set_time_sec1
-	
 	movlw	00001100B
 	call    LCD_Send_Byte_I
 check_enter:
@@ -292,6 +293,7 @@ write_keypad_val:
 	return
 
 input_sort:
+	movff	0x20, set_time_sec1
 	movf	set_time_hrs1, W
 	mullw	0x0A
 	movf	PRODL, W
@@ -317,8 +319,8 @@ input_sort:
 	movwf	temporary_sec
 	
 	btfss	alarm, 0
-	call input_into_clock
-	call input_into_alarm
+	bra input_into_clock
+	bra input_into_alarm
 	
 	return
 	
@@ -338,7 +340,7 @@ input_into_alarm:
 	bsf	alarm_on, 0
 	bcf	operation_check, 0
 	return
-
+	
 output_error:
     call	LCD_Clear
     call	delay
