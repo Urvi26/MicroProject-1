@@ -83,8 +83,6 @@ buzzer:
 	call delay
 	call write_alarm
 	call delay
-	movlw	0x32
-	call LCD_Send_Byte_D
 	call delay
 	call	LCD_Clear
 	return

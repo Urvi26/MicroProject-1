@@ -341,10 +341,10 @@ input_into_alarm:
 
 output_error:
     call	LCD_Clear
-    call delay
+    call	delay
     movlw	00001100B
-    call    LCD_Send_Byte_I
-    call    delay
+    call	LCD_Send_Byte_I
+    call	delay
     movlw	10000000B
     call	LCD_Set_Position	    ;set position in LCD to first line, first character
     movlw	0x45
