@@ -249,10 +249,6 @@ delete:
 	btfss	alarm, 0
 	bra	cancel
 	bcf	alarm_on, 0
-	movlw	0xDD
-	movwf	alarm_hrs
-	movwf	alarm_min
-	movwf	alarm_sec
 	bra	cancel
 
 input_check:
@@ -275,6 +271,8 @@ keypad_input_F:
 	bra input_check
 	
 Display_Alarm_Time:
+	btfss	alarm_on, 0
+	bra	write_noalarm
 	movf	alarm_hrs, W
 	call Write_Decimal_to_LCD
 	movlw	0x3A
@@ -395,9 +393,32 @@ write_alarm:				    ;write the words 'time:' before displaying the time
 	movlw   0x3A
 	call    LCD_Write_Character	;write ':'
 	return	
+
+write_noalarm:
+	call delay
+	movlw	11000110B
+	call	LCD_Set_Position	    ;set position in LCD to first line, first character
+	movlw   0x4E
+	call    LCD_Write_Character	;write 'N'
+	movlw   0x6F
+	call    LCD_Write_Character	;write 'o'
+	movlw   0x20
+	call    LCD_Write_Character	;write ' '
+	movlw	0x41
+	call	LCD_Write_Character	;write 'A'
+	movlw	0x6C
+	call	LCD_Write_Character	;write 'l'
+	movlw	0x61
+	call	LCD_Write_Character	;write 'a'
+	movlw	0x72
+	call	LCD_Write_Character	;write 'r'
+	movlw   0x6D
+	call    LCD_Write_Character	;write 'm'
+	
+	return	
 	
 Display_zeros:
-	movlw	10000110B
+	movlw	1000110B
 	call    LCD_Set_Position
 	movlw	0x00
 	call	LCD_Write_Hex
