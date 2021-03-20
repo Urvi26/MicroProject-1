@@ -1,107 +1,67 @@
 #include <xc.inc>
 	
-extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
-extrn	LCD_Set_Position, LCD_Write_Character
-extrn	Write_Decimal_to_LCD  
-extrn	keypad_val, keypad_ascii, operation_check
+extrn	Write_Decimal_to_LCD
+extrn	operation_check
+extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_delay_ms, LCD_Clear 
+extrn	Keypad, keypad_val, keypad_ascii
+extrn	write_alarm, write_time
+global	clock, clock_setup, delay, check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, rewrite_clock
     
-extrn	temporary_hrs, temporary_min, temporary_sec
-
-global	clock_sec, clock_min, clock_hrs
-global	Clock, Clock_Setup, rewrite_clock
-global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null  
-global	alarm_hrs, alarm_min, alarm_sec, Display_Alarm_Time, alarm, alarm_on
-    
-psect	udata_acs
-clock_hrs: ds 1
-clock_min: ds 1
-clock_sec: ds 1
-    
+psect	udata_acs   
+	
+clock_sec:	ds  1
+clock_min:	ds  1
+clock_hrs:	ds  1
 alarm_sec:	ds  1
 alarm_min:	ds  1
 alarm_hrs:	ds  1
     
-alarm:	ds 1
-alarm_on:   ds 1
+check_60:	ds  1
+check_24:	ds  1
 
-check_60:	ds  1	;reserving byte to store decimal 60 in hex
-check_24:	ds  1	;reserving byte to store decimal 24 in hex
-
-timer_start_value_1:	ds 1
-timer_start_value_2:	ds 1
-
-hex_A:	ds 1
-hex_B:	ds 1
-hex_C:	ds 1
-hex_D:	ds 1
-hex_E:	ds 1
-hex_F:	ds 1
-hex_null:   	ds  1
-
-
-psect	Clock_timer_code, class=CODE
-
-Clock_Setup: 
-	movlw	0x00		;setting start time to 00:00:00
+    psect	Clock_timer_code, class=CODE
+	
+clock_setup: 
+	movlw  0x00
 	movwf   clock_sec
 	movwf   clock_min
 	movwf   clock_hrs
-	
 	movwf	alarm_sec
 	movwf	alarm_min
 	movwf	alarm_hrs
 	
-	bcf	alarm, 0
-	bcf	alarm_on, 0
-	
-	call	rewrite_clock
-	
-	movlw	0x3C		;setting hex values for decimal 24 and 60 for comparison
+	movlw	0x3C
 	movwf	check_60
 	movlw	0x18
 	movwf	check_24
-	
-	movlw	0x0A		;storing keypad character hex values
-	movwf	hex_A
-	movlw	0x0B
-	movwf	hex_B
-	movlw	0x0C
-	movwf	hex_C
-	movlw	0x0D
-	movwf	hex_D
-	movlw	0x0E
-	movwf	hex_E
-	movlw	0x0F
-	movwf	hex_F
-	movlw	0xff
-	movwf	hex_null
-	
-	movlw	0x0B
-	movwf	timer_start_value_1
-	movlw	0xDB
-	movwf	timer_start_value_2
+	call	rewrite_clock
 	
 	movlw	10000111B	; Set timer1 to 16-bit, Fosc/4/256
 	movwf	T0CON, A	; = 62.5KHz clock rate, approx 1sec rollover
+	movlw	0x0B
+	movwf	TMR0H, A
+	movlw	0xDB
+	movwf	TMR0L, A
 	bsf	TMR0IE		; Enable timer0 interrupt
 	bsf	GIE		; Enable all interrupts
-	return
-    
-Clock:	
+	
+	return	
+
+clock:	
 	btfss	TMR0IF		; check that this is timer0 interrupt
 	retfie	f		; if not then return
-	call	clock_inc	; increment clock time
-	btfss	operation_check, 0 ;skip rewrite clock if = 1
-	call	rewrite_clock	;write and display clock time as decimal on LCD  
-	call	compare_alarm
-	movff	timer_start_value_1, TMR0H	;setting upper byte timer start value
-	movff	timer_start_value_2, TMR0L		;setting lower byte timer start value
+	movlw	0x0B
+	movwf	TMR0H, A
+	movlw	0xDB
+	movwf	TMR0L, A
 	bcf	TMR0IF		; clear interrupt flag
-	retfie	f		; fast return from interrupt	
-	
+	call	clock_inc	; increment PORTJ 
+	btfss	operation_check, 0
+	call	rewrite_clock
+	call compare_alarm
+	retfie	f		; fast return from interrupt
+
 compare_alarm:
-	btfsc	alarm_on, 0
-	return
 	movf	alarm_hrs, W
 	CPFSEQ	clock_hrs
 	return
@@ -114,75 +74,58 @@ compare_alarm:
 	call buzzer ;WRITE THIS
 	return
 buzzer:
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
-	call	ALARM
-	return	
+	call LCD_Clear
+	call write_alarm
+	call	LCD_Clear
+	return
 	
-rewrite_clock:
-	movlw	10000000B	    ;set cursor to first line
-	call	LCD_Set_Position
-	call	LCD_Write_Time	    ;write 'Time: ' to LCD
-	movf	clock_hrs, W	    ;write hours time to LCD as decimal
-	call	Write_Decimal_to_LCD  
-	movlw	0x3A		    ;write ':' to LCD
-	call	LCD_Write_Character 
-	movf	clock_min, W	    ;write minutes time to LCD as decimal
-	call	Write_Decimal_to_LCD
-	movlw	0x3A		    ;write ':' to LCD
-	call	LCD_Write_Character
-	movf	clock_sec, W	    ;write seconds time to LCD as decimal
-	call	Write_Decimal_to_LCD
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
-	call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
-				    ;Here will write temperature to LCD
+clock_inc:	
+	incf	clock_sec   ;increment clock_sec
+	movf	clock_sec, W	
+	cpfseq	check_60    ;check if clock_sec is equal to 60
+	return		    ;return if it isn't equal
+	clrf	clock_sec   ;if it is equal, set to 0
+	incf	clock_min   ;and increment clock_min
+	movf	clock_min, W	
+	cpfseq	check_60    ;check if clock_min is equal to 60
+	return		    ;return if clock_min is not equal to 60
+	clrf	clock_min   ;if it is equal to 60, set to 0
+	incf	clock_hrs   ;and increment clock_hrs
+	movf	clock_hrs, W	
+	cpfseq	check_24    ;check if clock_hrs is equal to 24
+	return		    ;return if it isn't
+	clrf	clock_hrs   ;if it is equal, then set to 0
+	return		    ; and return
+
+rewrite_clock: 
+	call write_time
+	
+	movlw	00001100B
+	call LCD_Send_Byte_I
+	
+	call delay
+	
+	movlw	10000110B
+	call LCD_Set_Position	    ;set position in LCD to first line, first character
+	
+	movf	clock_hrs, W
+	call Write_Decimal_to_LCD	    ;write hours
+	
+	movlw	0x3A
+	call	LCD_Write_Character ;write ':'
+	
+	movf	clock_min, W
+	call Write_Decimal_to_LCD	    ;write minutes
+	
+	movlw	0x3A
+	call	LCD_Write_Character ;write ':'
+	    
+	movf	clock_sec, W
+	call Write_Decimal_to_LCD	    ;write seconds
 	return
 
-clock_inc:	
-	incf	clock_sec	    ;increase seconds time by one
-	movf	clock_sec, W	   
-	cpfseq	check_60	    ;check clock seconds is equal than 60
-	return			    ;return if not equal to 60
-	clrf	clock_sec	    ;set second time to 0 if was equal to 60
-	incf	clock_min	    ;increase minute time by one
-	movf	clock_min, W
-	cpfseq	check_60	    ;check if minute time equal to 60
+delay: movlw	0x40
+	call LCD_delay_ms
 	return
-	clrf	clock_min	    ;set minute time to 0 if = 60
-	incf	clock_hrs	    ;increase hour time by one
-	movf	clock_hrs, W	
-	cpfseq	check_24	    ;check if hour time equal to 24
-	return	
-	clrf	clock_hrs	    ;set hour time to 0 if = 24
-	return
-	
-	
-Display_Alarm_Time:
-	movf	alarm_hrs, W
-	call Write_Decimal_to_LCD
-	movlw	0x3A
-	call LCD_Write_Character
-	movf	alarm_min, W
-	call Write_Decimal_to_LCD
-	movlw	0x3A
-	call LCD_Write_Character
-	movf	alarm_sec, W
-	call Write_Decimal_to_LCD
-	return
-	
-ALARM:				    ;write the words 'time:' before displaying the time
-	;call delay
-	movlw	11000000B
-	call	LCD_Set_Position	    ;set position in LCD to first line, first character
-	movlw	0x41
-	call	LCD_Write_Character	;write 'A'
-	movlw	0x4C
-	call	LCD_Write_Character	;write 'L'
-	movlw	0x41
-	call	LCD_Write_Character	;write 'A'
-	movlw	0x52
-	call	LCD_Write_Character	;write 'R'
-	movlw   0x4D
-	call    LCD_Write_Character	;write 'M'
-	return	
+
+    end
