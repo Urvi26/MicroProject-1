@@ -4,9 +4,6 @@ extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Write_High_Nibble ; external L
 global	Write_Decimal_to_LCD
     
 psect	udata_acs   ; reserve data space in access ram
-counter:    ds 1    ; reserve one byte for a counter variable
-delay_count:ds 1    ; reserve one byte for counter in the delay routine
-
 bigl:	ds 1	;8x16, 16 bit number low byte input
 bigh:	ds 1	;8x16, 16 bit number high byte input
 small:	ds 1	;8x16, 8 bit number input
@@ -114,11 +111,6 @@ multiply16x8:
 	
 	movlw	0x00
 	addwfc	seouth, 1, 0  ;add carry bit to most sig bit of second product and store in 0x23
-	return
-
-	; a delay subroutine if you need one, times around loop in delay_count
-delay:	decfsz	delay_count, A	; decrement until zero
-	bra	delay
 	return
 	
 	end	
