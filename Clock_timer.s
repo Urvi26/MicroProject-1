@@ -2,7 +2,7 @@
 	
 extrn	Write_Decimal_to_LCD
 extrn	operation_check
-extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_delay_ms, LCD_Clear 
+extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_delay_ms, LCD_Clear, LCD_Send_Byte_D
 extrn	Keypad, keypad_val, keypad_ascii
 extrn	write_alarm, write_time
 global	clock, clock_setup, delay, check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, rewrite_clock
@@ -76,6 +76,8 @@ compare_alarm:
 buzzer:
 	call LCD_Clear
 	call write_alarm
+	movlw	0x32
+	call LCD_Send_Byte_D
 	call	LCD_Clear
 	return
 	
