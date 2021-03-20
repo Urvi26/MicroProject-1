@@ -12,6 +12,7 @@ psect	udata_acs
 clock_sec:	ds  1
 clock_min:	ds  1
 clock_hrs:	ds  1
+    
 alarm_sec:	ds  1
 alarm_min:	ds  1
 alarm_hrs:	ds  1
@@ -87,6 +88,7 @@ buzzer:
 	call delay
 	call	LCD_Clear
 	return
+
 rewrite_clock: 
 	call write_time
 	

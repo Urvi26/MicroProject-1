@@ -83,18 +83,20 @@ set_alarm:
 	call    LCD_Set_Position
 	
 	call	write_alarm
-	call	Display_Set_Alarm
+	call	Display_Alarm_Time
 	
 	movlw	11000110B
 	call    LCD_Set_Position
 	
 	bsf	alarm, 0
-	bra set_time_clear
+	bra	set_time_clear
 	    
 set_time: 
 	movlw	00001111B
 	call    LCD_Send_Byte_I
 	call delay
+	
+	call	Display_zeros
 	
 	movlw	10000110B
 	call    LCD_Set_Position
@@ -121,7 +123,7 @@ set_time1:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_keypad_val
 	movff	keypad_val, set_time_hrs1
 set_time2:
 	call input_check	
@@ -136,7 +138,7 @@ set_time2:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_keypad_val
 	
 	movlw   0x3A
 	call    LCD_Write_Character	;write ':'
@@ -155,7 +157,7 @@ set_time3:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_keypad_val
 	movff	keypad_val, set_time_min1
 set_time4:
 	call input_check	  
@@ -170,7 +172,7 @@ set_time4:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_keypad_val
 	
 	movlw   0x3A
 	call    LCD_Write_Character	;write ':'
@@ -189,7 +191,7 @@ set_time5:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_keypad_val
 	movff	keypad_val, set_time_sec1
 set_time6:
 	call input_check	  
@@ -204,7 +206,7 @@ set_time6:
 	btfsc	skip_byte, 0
 	bra	enter_time
 	
-	call set_time_write
+	call write_keypad_val
 	movff	keypad_val, set_time_sec2
 	
 	movlw	00001100B
@@ -224,7 +226,7 @@ check_enter:
 	
 enter_time:
 	call delay
-	bra input_prepare
+	bra input_sort
 	return
 	
 cancel:
@@ -242,6 +244,10 @@ delete:
 	btfss	alarm, 0
 	bra	cancel
 	bcf	alarm_on, 0
+	movlw	DD
+	movwf	alarm_hrs
+	movwf	alarm_min
+	movwf	alarm_sec
 	bra	cancel
 
 input_check:
@@ -267,7 +273,7 @@ keypad_input_F:
 	return
 	bra input_check
 	
-Display_Set_Alarm:
+Display_Alarm_Time:
 	movf	alarm_hrs, W
 	call Write_Decimal_to_LCD
 	movlw	0x3A
@@ -280,12 +286,12 @@ Display_Set_Alarm:
 	call Write_Decimal_to_LCD
 	return	
 	
-set_time_write:
+write_keypad_val:
 	movf	keypad_ascii, W
 	call	LCD_Write_Character
 	return
 
-input_prepare:
+input_sort:
 	movf	set_time_hrs1, W
 	mullw	0x0A
 	movf	PRODL, W
@@ -330,7 +336,6 @@ input_into_alarm:
 	call	LCD_Clear
 	bsf	alarm_on, 0
 	bcf	operation_check, 0
-	;call	rewrite_clock
 	return
 
 output_error:
@@ -384,6 +389,21 @@ write_alarm:				    ;write the words 'time:' before displaying the time
 	call    LCD_Write_Character	;write 'm'
 	movlw   0x3A
 	call    LCD_Write_Character	;write ':'
+	return	
+	
+Display_zeros:
+	movlw	10000110B
+	call    LCD_Set_Position
+	movlw	0x00
+	call	LCD_Write_Hex
+	movlw	0x3A		    ;write ':' to LCD
+	call	LCD_Write_Character 
+	movlw	0x00
+	call	LCD_Write_Hex
+	movlw	0x3A		    ;write ':' to LCD
+	call	LCD_Write_Character
+	movlw	0x00
+	call	LCD_Write_Hex
 	return	
 	
 end
