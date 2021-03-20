@@ -1,6 +1,6 @@
 #include <xc.inc>
 	
-extrn	Write_Decimal_to_LCD, operation_check
+extrn	Write_Decimal_to_LCD, operation_check, LCD_Write_Hex
 extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_Clear, LCD_delay_ms
 extrn	Keypad, keypad_val, keypad_ascii
 extrn	check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, delay, rewrite_clock
@@ -244,7 +244,7 @@ delete:
 	btfss	alarm, 0
 	bra	cancel
 	bcf	alarm_on, 0
-	movlw	DD
+	movlw	0xDD
 	movwf	alarm_hrs
 	movwf	alarm_min
 	movwf	alarm_sec
