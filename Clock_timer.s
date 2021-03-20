@@ -1,6 +1,6 @@
 #include <xc.inc>
 	
-extrn	LCD_Write_Time, LCD_Write_Temp
+extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
 extrn	LCD_Set_Position, LCD_Write_Character
 extrn	Write_Decimal_to_LCD  
 extrn	keypad_val, keypad_ascii, operation_check

@@ -67,9 +67,12 @@ check_cancel:
 	return
 
 set_alarm:
-	call LCD_Clear
+	;call LCD_Clear
 	movlw	00001111B
 	call    LCD_Send_Byte_I
+	
+	movlw	11000000B	    ;set cursor to first line
+	call	LCD_Set_Position
 	
 	call	Display_Set_Alarm
 	
@@ -95,7 +98,6 @@ set_alarm:
 	bra set_time_clear	
 	
 set_time: 
-	call LCD_Clear
 	movlw	00001111B
 	call    LCD_Send_Byte_I
     
@@ -307,7 +309,7 @@ Display_Set_Alarm:
 	
 	call	LCD_Write_Alarm	    ;write 'Alarm: ' to LCD
 	
-	call	Display_zeros
+	;call	Display_zeros
 	call	Display_Alarm_Time
 	
 	movlw	11000000B	    ;set cursor to first line
