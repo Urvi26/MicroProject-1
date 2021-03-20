@@ -9,16 +9,16 @@ global	Clock, Clock_setup, delay, check_60, check_24, alarm_sec, alarm_min, alar
     
 psect	udata_acs   
 	
-clock_sec:	ds  1
-clock_min:	ds  1
-clock_hrs:	ds  1
+clock_sec:  ds  1
+clock_min:  ds  1
+clock_hrs:  ds  1
     
-alarm_sec:	ds  1
-alarm_min:	ds  1
-alarm_hrs:	ds  1
+alarm_sec:  ds  1
+alarm_min:  ds  1
+alarm_hrs:  ds  1
     
-check_60:	ds  1
-check_24:	ds  1
+check_60:   ds  1
+check_24:   ds  1
 
     psect	Clock_timer_code, class=CODE
 	
