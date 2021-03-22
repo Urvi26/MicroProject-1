@@ -4,7 +4,7 @@ extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
 extrn	LCD_Set_Position, LCD_Write_Character
 extrn	Write_Decimal_to_LCD  
 extrn	keypad_val, keypad_ascii, operation_check
-    
+extrn	LCD_delay_ms, LCD_delay_x4us
 extrn	temporary_hrs, temporary_min, temporary_sec
 
 global	clock_sec, clock_min, clock_hrs
@@ -23,6 +23,10 @@ alarm_hrs:	ds  1
     
 alarm:	ds 1
 alarm_on:   ds 1
+buzz_bit: ds	1
+    
+buzzer_counter_1: ds 1
+buzzer_counter_2: ds 1
 
 check_60:	ds  1	;reserving byte to store decimal 60 in hex
 check_24:	ds  1	;reserving byte to store decimal 24 in hex
@@ -38,6 +42,7 @@ hex_E:	ds 1
 hex_F:	ds 1
 hex_null:   	ds  1
 
+Alarm_buzz: ds 1    
 
 psect	Clock_timer_code, class=CODE
 
@@ -47,12 +52,19 @@ Clock_Setup:
 	movwf   clock_min
 	movwf   clock_hrs
 	
+	;Temp Port A setup
+	bcf	TRISA, 3
+	
+	movlw	0x01	;;;;;
 	movwf	alarm_sec
 	movwf	alarm_min
 	movwf	alarm_hrs
 	
 	bcf	alarm, 0
 	bcf	alarm_on, 0
+	bcf	buzz_bit, 0
+	
+	clrf	Alarm_buzz
 	
 	call	rewrite_clock
 	
@@ -91,15 +103,26 @@ Clock:
 	btfss	TMR0IF		; check that this is timer0 interrupt
 	retfie	f		; if not then return
 	call	clock_inc	; increment clock time
-	btfss	operation_check, 0 ;skip rewrite clock if = 1
-	call	rewrite_clock	;write and display clock time as decimal on LCD  
-	call	compare_alarm
 	movff	timer_start_value_1, TMR0H	;setting upper byte timer start value
 	movff	timer_start_value_2, TMR0L		;setting lower byte timer start value
 	bcf	TMR0IF		; clear interrupt flag
+	btfss	operation_check, 0 ;skip rewrite clock if = 1
+	call	rewrite_clock	;write and display clock time as decimal on LCD 
+	call	check_alarm
 	retfie	f		; fast return from interrupt	
 	
-compare_alarm:
+check_alarm:
+	movlw	0x00
+	cpfseq	Alarm_buzz
+	bra	decrement_alarm_buzz
+	bra	compare_alarm
+
+decrement_alarm_buzz:
+	decf	Alarm_buzz
+	call	ALARM
+	return
+	
+compare_alarm:  
 	btfss	alarm_on, 0
 	return
 	movf	alarm_hrs, W
@@ -111,13 +134,33 @@ compare_alarm:
 	movf	alarm_sec, W
 	CPFSEQ	clock_sec
 	return
-	call buzzer ;WRITE THIS
+	
+	movlw	0x3C
+	movwf	Alarm_buzz
+	
+	call ALARM
 	return
-buzzer:
+ALARM:
 	movlw	11000000B	    ;set cursor to first line
 	call	LCD_Set_Position
-	call	ALARM
+	call	Display_ALARM
+
+	call	check_buzz_bit
+	call	buzzer
+
 	return	
+		
+check_buzz_bit:
+	btfsc	buzz_bit, 0
+	bra	clear_buzz_bit
+	bra	set_buzz_bit
+clear_buzz_bit:	
+	bcf	buzz_bit, 0
+	return
+set_buzz_bit:
+	bsf	buzz_bit, 0
+	return
+	
 	
 rewrite_clock:
 	movlw	10000000B	    ;set cursor to first line
@@ -136,8 +179,11 @@ rewrite_clock:
 	movlw	11000000B	    ;set cursor to first line
 	call	LCD_Set_Position
 	call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
-				    ;Here will write temperature to LCD
+	call	Temp		    ;Here will write temperature to LCD
 	return
+	
+Temp:		
+	
 
 clock_inc:	
 	incf	clock_sec	    ;increase seconds time by one
@@ -171,7 +217,7 @@ Display_Alarm_Time:
 	call Write_Decimal_to_LCD
 	return
 	
-ALARM:				    ;write the words 'time:' before displaying the time
+Display_ALARM:				    ;write the words 'time:' before displaying the time
 	;call delay
 	movlw	11000000B
 	call	LCD_Set_Position	    ;set position in LCD to first line, first character
@@ -186,3 +232,53 @@ ALARM:				    ;write the words 'time:' before displaying the time
 	movlw   0x4D
 	call    LCD_Write_Character	;write 'M'
 	return	
+	
+    
+buzzer:	
+	;Initialize
+	bcf	TRISB, 6
+	
+	movlw	0x64
+	movwf	buzzer_counter_1
+	movlw	0x1E
+	movwf	buzzer_counter_2
+	
+	
+	
+check_if_buzz:
+	btfss	buzz_bit, 0 
+	return
+	
+	;Buzz
+	call	buzz_loop_1
+	return
+	
+
+buzz_loop_1:
+	call	buzz_loop_2
+	movlw	0x1E
+	movwf	buzzer_counter_2
+	
+	decfsz	buzzer_counter_1
+	bra	buzz_loop_1
+	return
+    
+buzz_loop_2:
+	call	buzz_sequence
+	decfsz	buzzer_counter_2
+	bra	buzz_loop_2
+	return
+	
+	
+buzz_sequence:	
+	bsf	LATB, 6	;Ouput high
+	call	delay_buzzer
+	bcf	LATB, 6	;Ouput low
+	call	delay_buzzer
+	
+	
+delay_buzzer:
+    movlw   0x20
+    call    LCD_delay_x4us
+    return
+    
