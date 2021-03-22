@@ -1,11 +1,13 @@
 #include <xc.inc>
 	
 extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
-extrn	LCD_Set_Position, LCD_Write_Character
+extrn	LCD_Set_Position, LCD_Write_Character, LCD_Write_Hex
 extrn	Write_Decimal_to_LCD  
 extrn	keypad_val, keypad_ascii, operation_check
 extrn	LCD_delay_ms, LCD_delay_x4us
 extrn	temporary_hrs, temporary_min, temporary_sec
+    
+extrn  ADC_Setup, ADC_Read       
 
 global	clock_sec, clock_min, clock_hrs
 global	Clock, Clock_Setup, rewrite_clock
@@ -53,7 +55,9 @@ Clock_Setup:
 	movwf   clock_hrs
 	
 	;Temp Port A setup
-	bcf	TRISA, 3
+	;bcf	TRISA, 3
+	
+	call	ADC_Setup
 	
 	movlw	0x01	;;;;;
 	movwf	alarm_sec
@@ -182,7 +186,12 @@ rewrite_clock:
 	call	Temp		    ;Here will write temperature to LCD
 	return
 	
-Temp:		
+Temp:	call	ADC_Read
+	movf	ADRESH, W, A
+	call	LCD_Write_Hex
+	movf	ADRESL, W, A
+	call	LCD_Write_Hex
+	return
 	
 
 clock_inc:	
