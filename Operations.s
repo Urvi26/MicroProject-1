@@ -339,7 +339,6 @@ input_into_alarm:
 	
 output_error:
     call	LCD_Clear
-    call	delay
     movlw	00001100B
     call	LCD_Send_Byte_I
     call	delay

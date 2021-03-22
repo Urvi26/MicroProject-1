@@ -18,6 +18,8 @@ LCD_hex_tmp:	ds 1    ; reserve 1 byte for variable LCD_hex_tmp
 psect	lcd_code,class=CODE
 LCD_Clear: movlw	00000001B	; display clear
 	   call	LCD_Send_Byte_I
+	   movlw	2	
+	   call	LCD_delay_ms
 	   return	
 	   
 LCD_Setup:
