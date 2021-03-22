@@ -251,14 +251,28 @@ check_enter:
 	
 enter_time:
 	call input_sort
-cancel:
-	call LCD_Clear
+	
+	;call LCD_Clear
 	
 	movlw	00001100B
 	call    LCD_Send_Byte_I
 	
 	bcf	operation_check, 0
 	bcf	alarm, 0
+	
+	call	LCD_Clear
+	
+	return
+	
+cancel:
+	
+	movlw	00001100B
+	call    LCD_Send_Byte_I
+	
+	bcf	operation_check, 0
+	bcf	alarm, 0
+	
+	call LCD_Clear
 	
 	return
 	
@@ -304,12 +318,17 @@ Display_Set_Time:
 	return
 	
 Display_Set_Alarm:
+	;call	LCD_Clear
+    
     	movlw	10000000B	    ;set cursor to first line
 	call	LCD_Set_Position
 	
 	call	LCD_Write_Alarm	    ;write 'Alarm: ' to LCD
 	
 	;call	Display_zeros
+	btfss	alarm_on,0
+	call	write_no_alarm
+	btfss	skip_byte,0
 	call	Display_Alarm_Time
 	
 	movlw	11000000B	    ;set cursor to first line
@@ -353,6 +372,30 @@ Display_zeros:
 	movlw	0x0
 	call	LCD_Write_Low_Nibble
 	return
+	
+write_no_alarm:
+	call delay
+	;movlw	11000110B
+	;call	LCD_Set_Position	    ;set position in LCD to first line, first character
+	movlw   0x4E
+	call    LCD_Write_Character	;write 'N'
+	movlw   0x6F
+	call    LCD_Write_Character	;write 'o'
+	movlw   0x20
+	call    LCD_Write_Character	;write ' '
+	movlw	0x41
+	call	LCD_Write_Character	;write 'A'
+	movlw	0x6C
+	call	LCD_Write_Character	;write 'l'
+	movlw	0x61
+	call	LCD_Write_Character	;write 'a'
+	movlw	0x72
+	call	LCD_Write_Character	;write 'r'
+	movlw   0x6D
+	call    LCD_Write_Character	;write 'm'
+	movlw   0x20
+	call    LCD_Write_Character	;write ' '
+	return	
 	
 Write_keypad_val:
 	;movf	keypad_ascii, W
@@ -414,6 +457,10 @@ input_into_alarm:
 	
 	
 output_error:
+    movlw	00001100B
+    call    LCD_Send_Byte_I ;turn off cursor and blinking
+    
+    call	LCD_Clear
     movlw	10000000B
     call	LCD_Set_Position	    ;set position in LCD to first line, first character
     movlw	0x45
@@ -427,14 +474,9 @@ output_error:
     movlw	0x72
     call	LCD_Write_Character	;write 'r'  
     movlw	0x64
-    call	LCD_delay_ms;WRITE THIS SUBROUTINE FOR A 3SEC DELAY LATER
-    movlw	0x64
-    call	LCD_delay_ms
-    movlw	0x64
-    call	LCD_delay_ms
-    movlw	0x64
-    call	LCD_delay_ms
-    
+    call	delay
+    call	delay
+    call	delay
     bra	    cancel
     
     

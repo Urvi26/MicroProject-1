@@ -2,7 +2,7 @@
 
 extrn	Clock_Setup, Clock
 extrn	operation
-extrn	LCD_Setup
+extrn	LCD_Setup, LCD_Clear
 extrn	Keypad, keypad_val, keypad_ascii
   
 global	operation_check
@@ -32,6 +32,7 @@ settings_clock:
 	bra	settings_clock
 	
 	call	operation
+
 	
 	goto	settings_clock	; Sit in infinite loop
     

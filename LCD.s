@@ -50,8 +50,12 @@ Alarm_Message:		;message to display 'Temp:'
 
 psect	lcd_code,class=CODE
 LCD_Clear: 
+	movlw   40
+	call	LCD_delay_ms
 	movlw	00000001B	; display clear
 	call	LCD_Send_Byte_I
+	movlw	2		; wait 2ms
+	call	LCD_delay_ms
 	return	
 	   
 LCD_Setup:
