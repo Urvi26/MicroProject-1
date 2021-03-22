@@ -20,6 +20,7 @@
       <itemPath>Operations.s</itemPath>
       <itemPath>Decimal_Display.s</itemPath>
       <itemPath>ADC.s</itemPath>
+      <itemPath>Temperature.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

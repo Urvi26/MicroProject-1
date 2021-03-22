@@ -8,7 +8,8 @@ extrn	LCD_delay_ms, LCD_delay_x4us
 extrn	temporary_hrs, temporary_min, temporary_sec
     
 extrn  ADC_Setup, ADC_Read       
-
+extrn	Temp
+    
 global	clock_sec, clock_min, clock_hrs
 global	Clock, Clock_Setup, rewrite_clock
 global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null  
@@ -184,13 +185,6 @@ rewrite_clock:
 	call	LCD_Set_Position
 	call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
 	call	Temp		    ;Here will write temperature to LCD
-	return
-	
-Temp:	call	ADC_Read
-	movf	ADRESH, W, A
-	call	LCD_Write_Hex
-	movf	ADRESL, W, A
-	call	LCD_Write_Hex
 	return
 	
 
