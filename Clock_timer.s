@@ -2,7 +2,7 @@
 	
 extrn	Write_Decimal_to_LCD
 extrn	operation_check, alarm_on
-extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_delay_ms, LCD_Clear, LCD_Send_Byte_D
+extrn	LCD_Write_Character, LCD_Set_Position, LCD_Send_Byte_I, LCD_delay_ms, LCD_Clear, LCD_Send_Byte_D, LCD_Write_Hex, ADC_Read, ADC_Setup
 extrn	Keypad, keypad_val, keypad_ascii
 extrn	write_alarm, write_time, alarm_on
 global	Clock, Clock_setup, delay, check_60, check_24, alarm_sec, alarm_min, alarm_hrs, clock_sec, clock_min, clock_hrs, rewrite_clock
@@ -23,6 +23,7 @@ check_24:   ds  1
     psect	Clock_timer_code, class=CODE
 	
 Clock_setup: 
+	call ADC_Setup
 	movlw  0x00
 	movwf   clock_sec
 	movwf   clock_min
@@ -62,8 +63,17 @@ Clock:
 	call	compare_alarm
 	btfss	operation_check, 0
 	call	rewrite_clock
+	call Temp
 	retfie	f		; fast return from interrupt
 
+Temp:	
+    call ADC_Read
+    movf    ADRESH, W, A
+    call LCD_Write_Hex
+    movf    ADRESL, W, A
+    call LCD_Write_Hex
+    return
+	
 compare_alarm:
 	btfss	alarm_on, 0
 	return
