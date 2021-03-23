@@ -1,25 +1,23 @@
 #include <xc.inc>
 	
 extrn	Write_Decimal_to_LCD
-extrn	LCD_Clear, LCD_Write_Character, LCD_Write_Hex, operation_check
+extrn	LCD_Clear, LCD_Write_Character, LCD_Write_Hex
 extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
 extrn	LCD_Send_Byte_I, LCD_Send_Byte_D, LCD_Set_Position
 extrn	LCD_Write_Low_Nibble, LCD_Write_High_Nibble, LCD_delay_x4us, LCD_delay_ms
 extrn	Keypad, keypad_val, keypad_ascii
 extrn	rewrite_clock
+extrn	operation_check
 extrn	clock_sec, clock_min, clock_hrs  
-extrn	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null
-
-    
+extrn	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null, check_60, check_24
 extrn	alarm_hrs, alarm_min, alarm_sec, Display_Alarm_Time, alarm, alarm_on    
     
 global	temporary_hrs, temporary_min, temporary_sec
-    
 global	Clock, Clock_Setup, operation
     
 psect	udata_acs
-check_60:	ds  1	;reserving byte to store decimal 60 in hex
-check_24:	ds  1	;reserving byte to store decimal 24 in hex
+;check_60:	ds  1	;reserving byte to store decimal 60 in hex
+;check_24:	ds  1	;reserving byte to store decimal 24 in hex
     
 set_time_hrs1: ds 1
 set_time_hrs2: ds 1  
@@ -37,9 +35,6 @@ timer_start_value_2: ds 1
     
 skip_byte:	ds 1
 
-    
-	
-    
 psect	Operations_code, class=CODE
 
 

@@ -3,16 +3,16 @@
 extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
 extrn	LCD_Set_Position, LCD_Write_Character, LCD_Write_Hex
 extrn	Write_Decimal_to_LCD  
-extrn	keypad_val, keypad_ascii, operation_check
+extrn	keypad_val, keypad_ascii
 extrn	LCD_delay_ms, LCD_delay_x4us
 extrn	temporary_hrs, temporary_min, temporary_sec, Keypad
-    
-extrn  ADC_Setup, ADC_Read       
+extrn	operation_check  
+extrn	ADC_Setup, ADC_Read       
 extrn	Temp
     
 global	clock_sec, clock_min, clock_hrs
 global	Clock, Clock_Setup, rewrite_clock
-global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null  
+global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null, check_60, check_24  
 global	alarm_hrs, alarm_min, alarm_sec, Display_Alarm_Time, alarm, alarm_on
     
 psect	udata_acs
@@ -20,19 +20,20 @@ clock_hrs: ds 1
 clock_min: ds 1
 clock_sec: ds 1
     
-alarm_sec:	ds  1
-alarm_min:	ds  1
-alarm_hrs:	ds  1
-    
-alarm:	ds 1
-alarm_on:   ds 1
-buzz_bit: ds	1
+alarm_sec:  ds  1
+alarm_min:  ds  1
+alarm_hrs:  ds  1
+
+Alarm_buzz: ds  1   
+alarm:	    ds  1
+alarm_on:   ds  1
+buzz_bit:   ds  1
     
 buzzer_counter_1: ds 1
 buzzer_counter_2: ds 1
 
-check_60:	ds  1	;reserving byte to store decimal 60 in hex
-check_24:	ds  1	;reserving byte to store decimal 24 in hex
+check_60:   ds  1	;reserving byte to store decimal 60 in hex
+check_24:   ds  1	;reserving byte to store decimal 24 in hex
 
 timer_start_value_1:	ds 1
 timer_start_value_2:	ds 1
@@ -44,8 +45,6 @@ hex_D:	ds 1
 hex_E:	ds 1
 hex_F:	ds 1
 hex_null:   	ds  1
-
-Alarm_buzz: ds 1   
     
 skip_byte: ds 1
 
