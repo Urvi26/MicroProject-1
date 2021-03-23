@@ -101,7 +101,12 @@ Conversion:
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	return
-	
+conversion2:
+    movff   ADRESH, dividendh
+    movff   ADRESL, dividendl
+    call    division16by8
+    movf    quotient, W
+    call    Write_Decimal_to_LCD
 multiply24x8:	
     
 	movf    tinl, W
@@ -187,6 +192,7 @@ division16by8:
     movwf   divisor	    
     movlw   0x00	    ;move 1 to quotient
     movwf   quotient
+    mulwf   divisor
     
 startdivision:
     movff   multiplier, quotient    ;move multiplier to quotient
