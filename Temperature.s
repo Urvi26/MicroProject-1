@@ -190,7 +190,7 @@ division:
     return
     subwf   dividend, 1, 0
     incf    quotient	;clear this somewhere?
-    bra	    divide
+    bra	    division
 	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:
