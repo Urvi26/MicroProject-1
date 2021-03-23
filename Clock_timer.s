@@ -7,8 +7,10 @@ extrn	keypad_val, keypad_ascii, operation_check
 extrn	LCD_delay_ms, LCD_delay_x4us
 extrn	temporary_hrs, temporary_min, temporary_sec
     
-extrn  ADC_Setup, ADC_Read       
+extrn	ADC_Setup, ADC_Read       
 extrn	Temp
+extrn	Keypad
+
     
 global	clock_sec, clock_min, clock_hrs
 global	Clock, Clock_Setup, rewrite_clock
@@ -46,6 +48,8 @@ hex_F:	ds 1
 hex_null:   	ds  1
 
 Alarm_buzz: ds 1    
+    
+skip_byte: ds 1
 
 psect	Clock_timer_code, class=CODE
 
@@ -70,6 +74,8 @@ Clock_Setup:
 	bcf	buzz_bit, 0
 	
 	clrf	Alarm_buzz
+	
+	bsf	skip_byte, 0
 	
 	call	rewrite_clock
 	
@@ -234,8 +240,22 @@ Display_ALARM:				    ;write the words 'time:' before displaying the time
 	call	LCD_Write_Character	;write 'R'
 	movlw   0x4D
 	call    LCD_Write_Character	;write 'M'
+	
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
 	return	
 	
+Write_space:
+	movlw   0x20
+	call    LCD_Write_Character	;write 'M'
+	return
     
 buzzer:	
 	;Initialize
@@ -245,19 +265,20 @@ buzzer:
 	movwf	buzzer_counter_1
 	movlw	0x1E
 	movwf	buzzer_counter_2
-	
-	
-	
-check_if_buzz:
-	btfss	buzz_bit, 0 
-	return
-	
-	;Buzz
-	call	buzz_loop_1
-	return
-	
 
 buzz_loop_1:
+    
+check_cancel_snooze:
+	call	Keypad
+	movf	keypad_val, W
+	CPFSEQ	hex_C
+	btfss	skip_byte, 0
+	bra	cancel_alarm
+	CPFSEQ	hex_A
+	btfss	skip_byte, 0
+	bra	snooze_alarm	    
+   
+
 	call	buzz_loop_2
 	movlw	0x1E
 	movwf	buzzer_counter_2
@@ -268,20 +289,92 @@ buzz_loop_1:
     
 buzz_loop_2:
 	call	buzz_sequence
+    
 	decfsz	buzzer_counter_2
-	bra	buzz_loop_2
+	bra	buzz_loop_2	
 	return
 	
 	
+	
 buzz_sequence:	
+    
+check_if_buzz:
+	btfss	buzz_bit, 0
+	bra	no_buzz
+	bra	yes_buzz
+	
+no_buzz:
+	call	delay_buzzer
+	call	delay_buzzer
+	return
+	
+yes_buzz:	
 	bsf	LATB, 6	;Ouput high
 	call	delay_buzzer
 	bcf	LATB, 6	;Ouput low
 	call	delay_buzzer
+	return	
 	
+	
+	
+cancel_alarm:
+	clrf	Alarm_buzz
+	return
+	
+snooze_alarm:
+	clrf	Alarm_buzz
+	call	Display_Snooze
+	
+	movlw	0x05
+	addwf	alarm_min
+	movlw	0x3B
+	cpfsgt	alarm_min
+	return
+	movlw	0x3C
+	subwf	alarm_min, 1
+	incf	alarm_hrs
+	movlw	0x17
+	cpfsgt	alarm_hrs
+	return
+	movlw	0x18
+	subwf	alarm_hrs, 1
+	
+	return
+	
+Display_Snooze:				    ;write the words 'time:' before displaying the time
+	movlw	11000000B
+	call	LCD_Set_Position	    ;set position in LCD to first line, first character
+	movlw	0x53
+	call	LCD_Write_Character	;write 'S'
+	movlw	0x6E
+	call	LCD_Write_Character	;write 'n'
+	movlw	0x6F
+	call	LCD_Write_Character	;write 'o'
+	movlw	0x6F
+	call	LCD_Write_Character	;write 'o'
+	movlw   0x7A
+	call    LCD_Write_Character	;write 'z'
+	movlw   0x65
+	call    LCD_Write_Character	;write 'e'
+	
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	
+	
+	return	
 	
 delay_buzzer:
-    movlw   0x20
-    call    LCD_delay_x4us
-    return
+	movlw   0x20
+	call    LCD_delay_x4us
+	return
     
