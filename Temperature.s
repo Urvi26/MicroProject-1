@@ -107,6 +107,12 @@ conversion2:
     call    division16by8
     movf    quotient, W
     call    Write_Decimal_to_LCD
+    
+    movlw	0x2E
+    call	LCD_Write_Character ;writing decimal point
+	
+    movf remainder, W
+    call Write_Decimal_to_LCD
 multiply24x8:	
     
 	movf    tinl, W
@@ -191,7 +197,7 @@ division16by8:
     movlw   0x64	    ;move 0x64 or 100 to the divisor
     movwf   divisor	    
     movlw   0x00	    ;move 1 to quotient
-    movwf   quotient
+    movwf   multiplier
     mulwf   divisor
     
 startdivision:
@@ -212,7 +218,7 @@ startdivision:
     movf    PRODL, W	    ;if it is equal,
     CPFSGT  dividendl	    ;check if dividendl is greater than PRODL
     return		    ;if it is not greater than PRODL, return
-    bra	startdivision	    ;if it is greater than PRODL, loop back
+    bra	    startdivision   ;if it is greater than PRODL, loop back
     
     return
 	
