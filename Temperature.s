@@ -182,7 +182,35 @@ multiply16x8:
 	addwfc	seouth, 1, 0  ;add carry bit to most sig bit of second product and store in 0x23
 	return
 
-division:
+division16by8:
+    movlw   0x64	    ;move 0x64 or 100 to the divisor
+    movwf   divisor	    
+    movlw   0x00	    ;move 1 to quotient
+    movwf   quotient
+    
+startdivision:
+    movff   multiplier, quotient    ;move multiplier to quotient
+    
+    movf    dividendl, W    ;move dividend low to W
+    subwf   PRODL	    ;subtract PRODL from dividend low
+    movwf   remainder	    ;this is the remainder
+    
+    incf    multiplier	    ;increment quotient
+    movf    multiplier, W   
+    mulwf   divisor	    ;multiply multiplier by divisor
+  
+    movf    dividendh, W    
+    CPFSEQ  PRODH	    ;check if PRODH is equal to dividendh
+    bra	    startdivision   ;if it is not equal, loop back
+    
+    movf    PRODL, W	    ;if it is equal,
+    CPFSGT  dividendl	    ;check if dividendl is greater than PRODL
+    return		    ;if it is not greater than PRODL, return
+    bra	startdivision	    ;if it is greater than PRODL, loop back
+    
+    return
+	
+division8by8:
     clrf    quotient		;set quotient to zero
     movff   dividend, remainder	;move remaining dividend to remainder
     movf    divisor, W		;move divisor to W
