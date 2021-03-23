@@ -36,6 +36,11 @@ tinm:ds 1	;24x8, 24 bit number middle byte input
 tinh:ds 1	;24x8, 24 bit number high byte input
 ein:ds 1	;24x8, 8 bit number input
     
+divisor: ds 1
+dividend: ds 1
+quotient: ds 1
+remainder: ds 1
+    
 psect	temp_code, class=CODE
 	;convert and display binary voltage as decimal on LCD;
 Temp:
@@ -177,6 +182,16 @@ multiply16x8:
 	addwfc	seouth, 1, 0  ;add carry bit to most sig bit of second product and store in 0x23
 	return
 
+division:
+    clrf    quotient
+    movff   dividend, remainder
+    movf    divisor, W
+    CPFSGT  dividend    
+    return
+    subwf   dividend, 1, 0
+    incf    quotient	;clear this somewhere?
+    bra	    divide
+	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:
 	decfsz	delay_count, A	; decrement until zero
