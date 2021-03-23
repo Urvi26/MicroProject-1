@@ -1,4 +1,5 @@
 #include <xc.inc>
+    
 global	check_alarm
 
 psect	Alarm_code, class=CODE
@@ -97,7 +98,6 @@ check_if_buzz:
 	btfss	buzz_bit, 0
 	bra no_buzz
 	bra yes_buzz
-	
 no_buzz: 
 	call delay_buzzer
 	call delay_buzzer
@@ -114,7 +114,6 @@ delay_buzzer:
     call    LCD_delay_x4us
     return
 
-    
 cancel_alarm:
 	clrf	Alarm_buzz
 	return
