@@ -3,6 +3,7 @@
 global  LCD_Setup, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
 global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble
 global	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm, LCD_delay_ms, LCD_delay_x4us
+global	LCD_cursor_off, LCD_cursor_on
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -90,6 +91,16 @@ LCD_Setup:
 	call	LCD_delay_x4us
 	return
 
+LCD_cursor_off:
+	movlw	00001100B
+	call    LCD_Send_Byte_I	;set cursor off
+	return
+	
+LCD_cursor_on:
+	movlw	00001111B
+	call    LCD_Send_Byte_I	;set cursor on
+	return
+	
 LCD_Write_Character:	;send ascii code to LCD to display character
 	call	LCD_Send_Byte_D
 	movlw	10	    ; delay 40us

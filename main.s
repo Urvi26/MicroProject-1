@@ -3,7 +3,7 @@
 extrn	Clock_Setup, Clock
 extrn	operation
 extrn	LCD_Setup, LCD_Clear
-extrn	Keypad, keypad_val, keypad_ascii
+extrn	Keypad, keypad_val
   
 global	operation_check
     
