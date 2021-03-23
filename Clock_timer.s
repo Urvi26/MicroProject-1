@@ -128,7 +128,8 @@ decrement_alarm_buzz:
 	call	ALARM			;and buzzing
 	return
 	
-;try?	;decfsz Alarm_buzz
+;try instead of line 120-129?
+	;decfsz Alarm_buzz
 	;BNN	ALARM
 	;BRA	compare_alarm
 	
@@ -173,7 +174,8 @@ set_buzz_bit:
 	bsf	buzz_bit, 0		;set buzz_bit
 	return
 
-;try?	;BTG	buzz_bit, 0
+;try instead of line 166-175?	
+	;BTG	buzz_bit, 0
 	
 buzzer:	
 	;Initialize
