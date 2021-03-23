@@ -320,6 +320,16 @@ Display_ALARM:				    ;write the words 'time:' before displaying the time
 	call	LCD_Write_Character	;write 'R'
 	movlw   0x4D
 	call    LCD_Write_Character	;write 'M'
+	
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
 	return	
 	
  Display_Snooze:				    ;write the words 'time:' before displaying the time
@@ -351,5 +361,9 @@ Display_ALARM:				    ;write the words 'time:' before displaying the time
 	movlw	0x64
 	call	LCD_delay_ms
 	
-	
 	return	   
+	
+Write_space:
+	movlw   0x20
+	call    LCD_Write_Character	;write 'M'
+	return
