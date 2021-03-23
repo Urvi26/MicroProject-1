@@ -1,5 +1,5 @@
 #include <xc.inc>
-
+global	check_alarm
 
 psect	Alarm_code, class=CODE
 check_alarm:
