@@ -46,7 +46,7 @@ Temp:
 	
 	call	Conversion	;converst from hex to decimal
 	
-	movlw	0x20
+	movlw	10110010B
 	call	LCD_Write_Character
 	movlw	0x43
 	call	LCD_Write_Character
@@ -56,13 +56,13 @@ Temp:
 	
 	;convert hex to decimal;
 Conversion:
-	movlw	0x8D	;preparing inputs for multiplication
+	movlw	0x8A	;preparing inputs for multiplication
 	movwf	kl
-	movlw	0x06	;most sig byte of first number
+	movlw	0x41	;most sig byte of first number
 	movwf	kh
 	call  multiply16x16_ADRES   ;first step of conversion
-	movf	ssouthh, W
-	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
+	;movf	ssouthh, W
+	;call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	
 	

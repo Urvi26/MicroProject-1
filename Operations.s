@@ -44,14 +44,14 @@ psect	Operations_code, class=CODE
 
 
 operation:
-	bsf	operation_check, 0
+	bsf	operation_check, 0  ;if operation is pressed, then use this bit to make sure clock isnt displayed while settings are used
 	call	delay
 check_keypad:
 	call	Keypad
 	movf	keypad_val, W
 	CPFSEQ	hex_null	
 	bra	check_alarm
-	bra	check_keypad ;might get stuck
+	bra	check_keypad 
 check_alarm:	
 	CPFSEQ	hex_A
 	bra check_set_time
@@ -89,11 +89,8 @@ set_alarm:
 	call	LCD_Write_Character
 	movlw	0x20		    ;character ' '
 	call	LCD_Write_Character
-	
-	;call	LCD_Write_Alarm	    ;write 'Time: ' to LCD
-	
-	bsf	alarm, 0
-	
+
+	bsf	alarm, 0	    ;if we are setting alarm then set alarm,0
 	bra set_time_clear	
 	
 set_time: 
@@ -110,10 +107,10 @@ set_time:
 	
 	call	LCD_Write_Time	    ;write 'Time: ' to LCD
 	
-	bcf	alarm, 0
+	bcf	alarm, 0	;if we are setting the time then clear alarm,0
 	
 set_time_clear:	
-	movlw	0x0
+	movlw	0x0		;move 0x00 to following bytes 
 	movwf	set_time_hrs1
 	movwf	set_time_hrs2
 	movwf	set_time_min1
@@ -126,23 +123,22 @@ set_time_clear:
 	movwf	temporary_sec
 	
 	bcf	skip_byte,  0	    ;set skip byte to zero to be used to skip lines later
-	
 set_time1:	
-	call input_check	
+	call input_check	;checks what is input and returns with a number, E, D or C
 	
 	CPFSEQ	hex_C
 	btfsc	skip_byte, 0
-	bra	cancel
+	bra	cancel		;if C is pressed then cancel
 	CPFSEQ	hex_D
 	btfsc	skip_byte, 0
-	bra	delete
+	bra	delete		;if D is pressed then go to delete
 	CPFSEQ	hex_E
 	btfsc	skip_byte, 0
-	bra	enter_time
+	bra	enter_time	;if E is pressed then go to enter time
 	
-	movff	keypad_val, set_time_hrs1
+	movff	keypad_val, set_time_hrs1   ;move whatever is pressed on keypad to set_time_hrs1
 	
-	call	Write_keypad_val
+	call	Write_keypad_val	    ;write this value onto the LCD temporarily
 	call delay
 set_time2:
 	call input_check	  
@@ -249,12 +245,12 @@ check_enter:
 	bra	check_enter
 	
 enter_time:
-	call input_sort
+	call input_sort		;call input_sort to convert entered values to meaningful numbers to output and check against 60 or 24
 	
 	;call LCD_Clear
 	
 	movlw	00001100B
-	call    LCD_Send_Byte_I
+	call    LCD_Send_Byte_I	;set cursor off
 	
 	bcf	operation_check, 0
 	bcf	alarm, 0
@@ -262,19 +258,17 @@ enter_time:
 	call	LCD_Clear
 	
 	return
-	
 cancel:
 	
-	movlw	00001100B
+	movlw	00001100B	;set cursor off
 	call    LCD_Send_Byte_I
 	
 	bcf	operation_check, 0
 	bcf	alarm, 0
-	
+		
 	call LCD_Clear
 	
 	return
-	
 delete:
 	btfss	alarm, 0
 	bra	cancel
@@ -409,47 +403,47 @@ input_sort:
 	movlw	0x18
 	movwf	check_24
 	
-	movf	set_time_hrs1, W
-	mullw	0x0A
+	movf	set_time_hrs1, W	
+	mullw	0x0A		    ;multiply first dig entered to 0x0A
 	movf	PRODL, W
-	addwf	set_time_hrs2, 0
-	CPFSGT	check_24
-	bra	output_error
-	movwf	temporary_hrs
+	addwf	set_time_hrs2, 0    ;add to second dig to get hours
+	CPFSGT	check_24	    ;check that 24 is greater than hours	
+	bra	output_error	    ;ouput error if not
+	movwf	temporary_hrs	    ;move value to temporary_hrs if it is
 	
 	movf	set_time_min1, W
-	mullw	0x0A
-	movf	PRODL, W
-	addwf	set_time_min2, 0
-	CPFSGT	check_60
-	bra	output_error
-	movwf	temporary_min
+	mullw	0x0A		    ;multiply first dig of minutes entered to 0x0A
+	movf	PRODL, W	
+	addwf	set_time_min2, 0    ;add that value to second digit
+	CPFSGT	check_60	    ;check if 60 is greater than the minutes
+	bra	output_error	    ;output error if not
+	movwf	temporary_min	    ;move value to temporary_min if it is
 	
 	movf	set_time_sec1, W
-	mullw	0x0A
+	mullw	0x0A		    ;multiply first digit of seconds entered to 0x0A
 	movf	PRODL, W
-	addwf	set_time_sec2, 0
-	CPFSGT	check_60
-	bra	output_error
-	movwf	temporary_sec
+	addwf	set_time_sec2, 0    ;add that value to second digit
+	CPFSGT	check_60	;check if 60 is greater than the seconds
+	bra	output_error	;output error if not
+	movwf	temporary_sec	;move value to temporary_sec if it is
 	
-	btfss	alarm, 0
-	bra	input_into_clock
-	bra	input_into_alarm
+	btfss	alarm, 0	    ;check if bit alarm,0 is set
+	bra	input_into_clock    ;input temporary_hrs,_sec and _min into clock if bit is not set
+	bra	input_into_alarm    ;input into alarm if set
 	
-input_into_clock:
+input_into_clock:			    ;input temporary_hrs, temporary_sec, temporary_min into clock
 	movff	temporary_hrs, clock_hrs
 	movff	temporary_min, clock_min
 	movff	temporary_sec, clock_sec
 	;call	rewrite_clock		
 	return
 
-input_into_alarm:
+input_into_alarm:			    ;input temporary_hrs, temporary_sec, temporary_min into clock
 	movff	temporary_hrs, alarm_hrs
 	movff	temporary_min, alarm_min
 	movff	temporary_sec, alarm_sec
 	
-	bsf	alarm_on, 0
+	bsf	alarm_on, 0		    ;turn alarm on by setting alarm_on,0
 	;call	rewrite_clock
 	return
 	
