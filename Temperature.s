@@ -183,14 +183,14 @@ multiply16x8:
 	return
 
 division:
-    clrf    quotient
-    movff   dividend, remainder
-    movf    divisor, W
-    CPFSGT  dividend    
-    return
-    subwf   dividend, 1, 0
-    incf    quotient	;clear this somewhere?
-    bra	    division
+    clrf    quotient		;set quotient to zero
+    movff   dividend, remainder	;move remaining dividend to remainder
+    movf    divisor, W		;move divisor to W
+    CPFSGT  dividend		;check if dividend is greater than divisor
+    return			;return if dividend is not greater than divisor
+    subwf   dividend, 1, 0	;subtract divisor from dividend if it is greater
+    incf    quotient		;increment quotient for every subtraction done
+    bra	    division		;loop back until dividend is lower than divisor
 	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:
