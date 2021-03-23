@@ -367,3 +367,6 @@ Write_space:
 	movlw   0x20
 	call    LCD_Write_Character	;write 'M'
 	return
+	
+end
+	
