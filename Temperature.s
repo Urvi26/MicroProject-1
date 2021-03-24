@@ -36,11 +36,6 @@ tinm:ds 1	;24x8, 24 bit number middle byte input
 tinh:ds 1	;24x8, 24 bit number high byte input
 ein:ds 1	;24x8, 8 bit number input
     
-divisor: ds 1
-dividend: ds 1
-quotient: ds 1
-remainder: ds 1
-    
 psect	temp_code, class=CODE
 	;convert and display binary voltage as decimal on LCD;
 Temp:
@@ -101,18 +96,7 @@ Conversion:
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	return
-conversion2:
-    movff   ADRESH, dividendh
-    movff   ADRESL, dividendl
-    call    division16by8
-    movf    quotient, W
-    call    Write_Decimal_to_LCD
-    
-    movlw	0x2E
-    call	LCD_Write_Character ;writing decimal point
 	
-    movf remainder, W
-    call Write_Decimal_to_LCD
 multiply24x8:	
     
 	movf    tinl, W
@@ -193,45 +177,6 @@ multiply16x8:
 	addwfc	seouth, 1, 0  ;add carry bit to most sig bit of second product and store in 0x23
 	return
 
-division16by8:
-    movlw   0x64	    ;move 0x64 or 100 to the divisor
-    movwf   divisor	    
-    movlw   0x00	    ;move 1 to quotient
-    movwf   multiplier
-    mulwf   divisor
-    
-startdivision:
-    movff   multiplier, quotient    ;move multiplier to quotient
-    
-    movf    dividendl, W    ;move dividend low to W
-    subwf   PRODL	    ;subtract PRODL from dividend low
-    movwf   remainder	    ;this is the remainder
-    
-    incf    multiplier	    ;increment quotient
-    movf    multiplier, W   
-    mulwf   divisor	    ;multiply multiplier by divisor
-  
-    movf    dividendh, W    
-    CPFSEQ  PRODH	    ;check if PRODH is equal to dividendh
-    bra	    startdivision   ;if it is not equal, loop back
-    
-    movf    PRODL, W	    ;if it is equal,
-    CPFSGT  dividendl	    ;check if dividendl is greater than PRODL
-    return		    ;if it is not greater than PRODL, return
-    bra	    startdivision   ;if it is greater than PRODL, loop back
-    
-    return
-	
-division8by8:
-    clrf    quotient		;set quotient to zero
-    movff   dividend, remainder	;move remaining dividend to remainder
-    movf    divisor, W		;move divisor to W
-    CPFSGT  dividend		;check if dividend is greater than divisor
-    return			;return if dividend is not greater than divisor
-    subwf   dividend, 1, 0	;subtract divisor from dividend if it is greater
-    incf    quotient		;increment quotient for every subtraction done
-    bra	    division		;loop back until dividend is lower than divisor
-	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:
 	decfsz	delay_count, A	; decrement until zero

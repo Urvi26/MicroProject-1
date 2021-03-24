@@ -1,6 +1,6 @@
 #include <xc.inc>
-    extrn   LCD_Set_Position, LCD_Write_Character, LCD_Write_Low_Nibble, LCD_delay_ms
-    global  Display_ALARM, Display_Snooze, Display_error, Display_zeros, Display_no_alarm, Display_New, Write_colon
+   ; extrn   LCD_Set_Position, LCD_Write_Character, LCD_Write_Low_Nibble, LCD_delay_ms
+    ;global  Display_ALARM, Display_Snooze, Display_error, Display_zeros, Display_no_alarm, Display_New, Write_colon
 
     
     psect	Display_words_code, class=CODE

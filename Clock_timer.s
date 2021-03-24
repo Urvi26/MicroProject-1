@@ -1,23 +1,19 @@
 #include <xc.inc>
 	
 extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
-extrn	LCD_Set_Position
+extrn	LCD_Set_Position, LCD_Write_Character, LCD_Write_Hex
 extrn	Write_Decimal_to_LCD  
 extrn	keypad_val, keypad_ascii
-extrn	LCD_delay_x4us
-extrn	temporary_hrs, temporary_min, temporary_sec
-extrn	Keypad
+extrn	LCD_delay_ms, LCD_delay_x4us
+extrn	temporary_hrs, temporary_min, temporary_sec, Keypad
 extrn	operation_check  
 extrn	ADC_Setup, ADC_Read       
 extrn	Temp
-extrn	Display_ALARM, Display_Snooze, Write_colon
-extrn	LCD_cursor_off, LCD_cursor_on
-extrn	check_alarm
     
 global	clock_sec, clock_min, clock_hrs
 global	Clock, Clock_Setup, rewrite_clock
 global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null, check_60, check_24  
-global	alarm_hrs, alarm_min, alarm_sec, alarm, alarm_on
+global	alarm_hrs, alarm_min, alarm_sec, Display_Alarm_Time, alarm, alarm_on
     
 psect	udata_acs
 clock_hrs: ds 1
@@ -121,17 +117,154 @@ Clock:
 	call	check_alarm	    
 	retfie	f		; fast return from interrupt	
 	
+check_alarm:
+	movlw	0x00
+	cpfseq	Alarm_buzz		;check if alarm_buzz has reached 0
+	bra	decrement_alarm_buzz	;keep decrementing and buzzing if it hasn't
+	bra	compare_alarm		;go to compare alarm and return to normal cycles if it has reached 0
 
+decrement_alarm_buzz:
+	decf	Alarm_buzz		;subroutine to keep decrementing alarm_buzz
+	call	ALARM			;and buzzing
+	return
+	
+;try instead of line 120-129?
+	;decfsz Alarm_buzz
+	;BNN	ALARM
+	;BRA	compare_alarm
+	
+compare_alarm:				;compare alarm
+	btfss	alarm_on, 0		;check if alarm is on
+	return				;return if it isnt on
+	movf	alarm_hrs, W		;otherwise compare clock time to alarm time
+	CPFSEQ	clock_hrs
+	return
+	movf	alarm_min, W
+	CPFSEQ	clock_min
+	return
+	movf	alarm_sec, W
+	CPFSEQ	clock_sec
+	return			    ;return if not the same
+	
+	movlw	0x3C
+	movwf	Alarm_buzz	    ;set alarm_buzz to 60 to be able to buzz for 60 seconds
+	    
+	call ALARM		    ;call alarm if it is the same
+	return
+ALARM:
+	movlw	11000000B	    ;set cursor to first line
+	call	LCD_Set_Position
+	call	Display_ALARM	    ;display alarm while alarm is ringing
+	
+	call	check_buzz_bit	    ;check the buzz_bit to set it if it was clear and to clear it if it was set
+	;BTG	buzz_bit, 0
+	
+	call	buzzer		    ;call buzzer which buzzes when the buzz_bit is set
+
+	return	
+		
+check_buzz_bit:
+	btfsc	buzz_bit, 0		;check if buzz bit is set
+	bra	clear_buzz_bit		;branch to set it if it isnt set
+	bra	set_buzz_bit		;branch to clear it if it is set
+clear_buzz_bit:	
+	bcf	buzz_bit, 0		;clear buzz_bit 
+	return
+set_buzz_bit:
+	bsf	buzz_bit, 0		;set buzz_bit
+	return
+
+;try instead of line 166-175?	
+	;BTG	buzz_bit, 0
+	
+buzzer:	
+	;Initialize
+	bcf	TRISB, 6		;set RB6 to output
+	
+	movlw	0x64
+	movwf	buzzer_counter_1	;values for buzzer counter that counts down a second and buzzes at every count
+	movlw	0x1E
+	movwf	buzzer_counter_2	;	"
+
+buzz_loop_1:
+check_cancel_snooze:
+	call	Keypad
+	movf	keypad_val, W
+	CPFSEQ	hex_C
+	btfss	skip_byte, 0
+	bra	cancel_alarm
+	CPFSEQ	hex_A
+	btfss	skip_byte, 0
+	bra	snooze_alarm
+	
+	call	buzz_loop_2		;call second loop at every count, nested loops
+	movlw	0x1E
+	movwf	buzzer_counter_2	;reset count down value for second loop
+	
+	decfsz	buzzer_counter_1	;decrease till 0 and skip when 0
+	bra	buzz_loop_1
+	return		
+buzz_loop_2:
+	call	buzz_sequence		;buzz at every count
+	decfsz	buzzer_counter_2
+	bra	buzz_loop_2
+	return
+
+buzz_sequence:	
+check_if_buzz:
+	btfss	buzz_bit, 0
+	bra no_buzz
+	bra yes_buzz
+	
+no_buzz: 
+	call delay_buzzer
+	call delay_buzzer
+	return
+yes_buzz:	
+	bsf	LATB, 6	;Ouput high
+	call	delay_buzzer
+	bcf	LATB, 6	;Ouput low
+	call	delay_buzzer
+	return	
+    
+delay_buzzer:
+    movlw   0x20	    ;half the time period long delay
+    call    LCD_delay_x4us
+    return
+
+cancel_alarm:
+	clrf	Alarm_buzz
+	return
+snooze_alarm:
+	clrf    Alarm_buzz
+	call	Display_ALARM
+	movlw	0x05
+	addwf	alarm_min
+	movlw	0x3B
+	CPFSGT	alarm_min
+	return
+	movlw	0x3C
+	subwf	alarm_min, 1
+	incf	alarm_hrs
+	movlw	0x17
+	CPFSGT	alarm_hrs
+	return
+	movlw	0x18
+	subwf	alarm_hrs, 1
+	return
+	
 rewrite_clock:
 	movlw	10000000B	    ;set cursor to first line
 	call	LCD_Set_Position
 	call	LCD_Write_Time	    ;write 'Time: ' to LCD
 	movf	clock_hrs, W	    ;write hours time to LCD as decimal
 	call	Write_Decimal_to_LCD  
-	call	Write_colon
+	movlw	0x3A		    ;write ':' to LCD
+	call	LCD_Write_Character 
 	movf	clock_min, W	    ;write minutes time to LCD as decimal
 	call	Write_Decimal_to_LCD
-	call	Write_colon		    ;write ':' to LCD
+	movlw	0x3A		    ;write ':' to LCD
+	call	LCD_Write_Character
 	movf	clock_sec, W	    ;write seconds time to LCD as decimal
 	call	Write_Decimal_to_LCD
 	movlw	11000000B	    ;set cursor to first line
@@ -139,6 +272,7 @@ rewrite_clock:
 	call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
 	call	Temp		    ;Here will write temperature to LCD
 	return
+	
 	
 clock_inc:	
 	incf	clock_sec	    ;increase seconds time by one
@@ -156,6 +290,82 @@ clock_inc:
 	cpfseq	check_24	    ;check if hour time equal to 24
 	return	
 	clrf	clock_hrs	    ;set hour time to 0 if = 24
+	return
+	
+	
+Display_Alarm_Time:
+	movf	alarm_hrs, W
+	call Write_Decimal_to_LCD
+	movlw	0x3A
+	call LCD_Write_Character
+	movf	alarm_min, W
+	call Write_Decimal_to_LCD
+	movlw	0x3A
+	call LCD_Write_Character
+	movf	alarm_sec, W
+	call Write_Decimal_to_LCD
+	return
+	
+Display_ALARM:				    ;write the words 'time:' before displaying the time
+	;call delay
+	movlw	11000000B
+	call	LCD_Set_Position	    ;set position in LCD to first line, first character
+	movlw	0x41
+	call	LCD_Write_Character	;write 'A'
+	movlw	0x4C
+	call	LCD_Write_Character	;write 'L'
+	movlw	0x41
+	call	LCD_Write_Character	;write 'A'
+	movlw	0x52
+	call	LCD_Write_Character	;write 'R'
+	movlw   0x4D
+	call    LCD_Write_Character	;write 'M'
+	
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	return	
+	
+ Display_Snooze:				    ;write the words 'time:' before displaying the time
+	movlw	11000000B
+	call	LCD_Set_Position	    ;set position in LCD to first line, first character
+	movlw	0x53
+	call	LCD_Write_Character	;write 'S'
+	movlw	0x6E
+	call	LCD_Write_Character	;write 'n'
+	movlw	0x6F
+	call	LCD_Write_Character	;write 'o'
+	movlw	0x6F
+	call	LCD_Write_Character	;write 'o'
+	movlw   0x7A
+	call    LCD_Write_Character	;write 'z'
+	movlw   0x65
+	call    LCD_Write_Character	;write 'e'
+	
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	
+	return	   
+	
+Write_space:
+	movlw   0x20
+	call    LCD_Write_Character	;write 'M'
 	return
 	
 end
