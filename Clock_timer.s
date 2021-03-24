@@ -108,6 +108,7 @@ Clock_Setup:
 	movwf	T0CON, A	; = 62.5KHz clock rate, approx 1sec rollover
 	bsf	TMR0IE		; Enable timer0 interrupt
 	bsf	GIE		; Enable all interrupts
+	
 	return
     
 Clock:	

@@ -49,7 +49,7 @@ Temp:
 	;movf	ADRESL, W
 	;call	LCD_Write_Hex
 	
-	call	Conversion	;converst from hex to decimal
+	call	Display_Decimal	;converst from hex to decimal
 	
 	movlw	0x20
 	call	LCD_Write_Character
@@ -62,7 +62,7 @@ Temp:
 	;goto	measure_loop		; repeat loop so that voltage is displayed continuously as knob is turned
 	
 	;convert hex to decimal;
-Conversion:
+Display_Decimal:
 	movlw	0x8A	;preparing inputs for multiplication
 	movwf	kl
 	movlw	0x41	;most sig byte of first number
