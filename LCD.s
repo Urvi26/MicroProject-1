@@ -2,7 +2,7 @@
 
 global  LCD_Setup, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
 global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble
-global	LCD_delay_ms, LCD_delay_x4us
+global	LCD_delay_ms, LCD_delay_x4us, delay
 global  Write_ALARM, Write_Snooze, Write_Error, Write_zeros, Write_no_alarm, Write_New, Write_colon, Write_space, Write_Time, Write_Temp, Write_Alarm
 global	LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
     

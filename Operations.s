@@ -2,7 +2,7 @@
 	
 extrn	Write_Decimal_to_LCD
 extrn	LCD_Clear, operation_check
-extrn	LCD_Write_Low_Nibble, LCD_delay_x4us, LCD_delay_ms
+extrn	LCD_Write_Low_Nibble, delay
     
 extrn	Keypad, keypad_val
 
@@ -15,14 +15,14 @@ extrn	Display_Alarm_Time, alarm_on
 extrn	Write_Error, Write_no_alarm, Write_zeros, Write_Time, Write_Temp, Write_Alarm, Write_New
 extrn	Write_colon, Write_space, LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
 global	temporary_hrs, temporary_min, temporary_sec
-global	Clock, Clock_Setup, operation, Operation_Setup
+global	Clock, Clock_Setup, operation, Operation_Setup, skip_byte, check_60, check_24
     
 
     
     
 psect	udata_acs
-check_60:	ds  1	;reserving byte to store decimal 60 in hex
-check_24:	ds  1	;reserving byte to store decimal 24 in hex
+;check_60:	ds  1	;reserving byte to store decimal 60 in hex
+;check_24:	ds  1	;reserving byte to store decimal 24 in hex
     
 set_time_hrs1: ds 1
 set_time_hrs2: ds 1  
@@ -47,7 +47,7 @@ psect	Operations_code, class=CODE
 
 Operation_Setup:
 	bcf	alarm, 0, A
-	
+	bcf	skip_byte,  0, A	    ;set skip byte to zero to be used to skip lines later
 	return
 
 operation:
@@ -115,7 +115,6 @@ Set_Time_Clear:
 	clrf	temporary_min, A
 	clrf	temporary_sec, A
 	
-	bcf	skip_byte,  0, A	    ;set skip byte to zero to be used to skip lines later
 	
 Set_Time1:	
 	call Input_Check	
@@ -329,10 +328,10 @@ Write_keypad_val:
 	return
     
 Input_Sort:
-	movlw	0x3C		;setting hex values for decimal 24 and 60 for comparison
-	movwf	check_60, A
-	movlw	0x18
-	movwf	check_24, A
+	;movlw	0x3C		;setting hex values for decimal 24 and 60 for comparison
+	;movwf	check_60, A
+	;movlw	0x18
+	;movwf	check_24, A
 	
 	movf	set_time_hrs1, W, A
 	mullw	0x0A
@@ -389,16 +388,6 @@ Output_Error:
 	call	Write_Error  
 	bra	Cancel
     
-delay:	
-	movlw	0x64
-	call	LCD_delay_ms
-	movlw	0x64
-	call	LCD_delay_ms
-	movlw	0x64
-	call	LCD_delay_ms
-	movlw	0x64
-	call	LCD_delay_ms
-	return
 	
     end; ?? are we supposed to have this or not?
 

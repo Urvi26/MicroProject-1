@@ -12,7 +12,6 @@ global	Temp
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
-delay_count:ds 1    ; reserve one byte for counter in the delay routine
 in_K_h: ds 1	;k high byte, an input for 16x16
 in_K_l: ds 1	;k low byte, an input for 16x16
 in_AD_l:    ds 1
@@ -36,7 +35,6 @@ Temp:
 	
 	;movf	ADRESH, W
 	;call LCD_Write_Hex
-	;call delay
 	;movf	ADRESL, W
 	;call LCD_Write_Hex
 	call	Conversion	;converst from hex to decimal
@@ -125,19 +123,4 @@ Multiply16x16_ADRES:
 	
 	movlw	0x00
 	addwfc	out_16x16_uu, 1, 0  ;add carry to most sig byte of second prod
-	return
-
-	; a delay subroutine if you need one, times around loop in delay_count
-delay:
-	decfsz	delay_count, A	; decrement until zero
-	bra	delay
-	return
-delaya:
-	call delayb
-	decfsz	0x1A, A	; decrement until zero
-	bra	delaya
-	return
-delayb:
-	decfsz	0x1B, A	; decrement until zero
-	bra	delayb
 	return
