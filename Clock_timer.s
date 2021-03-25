@@ -1,7 +1,5 @@
 #include <xc.inc>
 	
-extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
-extrn	LCD_Set_Position, LCD_Write_Character, LCD_Write_Hex
 extrn	Write_Decimal_to_LCD  
 extrn	keypad_val, keypad_ascii, operation_check
 extrn	LCD_delay_ms, LCD_delay_x4us
@@ -11,6 +9,8 @@ extrn	ADC_Setup, ADC_Read
 extrn	Temp
 extrn	Keypad
 
+extrn	Write_Snooze, Write_space, Write_colon, Write_ALARM, Write_Time, Write_Temp
+extrn	LCD_Line2, LCD_Line1
     
 global	clock_sec, clock_min, clock_hrs
 global	Clock, Clock_Setup, rewrite_clock
@@ -153,9 +153,8 @@ compare_alarm:
 	call ALARM
 	return
 ALARM:
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
-	call	Display_ALARM
+	call	LCD_Line2
+	call	Write_ALARM
 
 	call	check_buzz_bit
 	call	buzzer
@@ -175,22 +174,18 @@ set_buzz_bit:
 	
 	
 rewrite_clock:
-	movlw	10000000B	    ;set cursor to first line
-	call	LCD_Set_Position
-	call	LCD_Write_Time	    ;write 'Time: ' to LCD
+	call	LCD_Line1
+	call	Write_Time	    ;write 'Time: ' to LCD
 	movf	clock_hrs, W, A	    ;write hours time to LCD as decimal
 	call	Write_Decimal_to_LCD  
-	movlw	0x3A		    ;write ':' to LCD
-	call	LCD_Write_Character 
+	call	Write_colon	    ;write ':' to LCD
 	movf	clock_min, W, A	    ;write minutes time to LCD as decimal
 	call	Write_Decimal_to_LCD
-	movlw	0x3A		    ;write ':' to LCD
-	call	LCD_Write_Character
+	call	Write_colon	    ;write ':' to LCD
 	movf	clock_sec, W, A	    ;write seconds time to LCD as decimal
 	call	Write_Decimal_to_LCD
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
-	call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
+	call	LCD_Line2
+	call	Write_Temp	    ;write 'Temp: ' to LCD
 	call	Temp		    ;Here will write temperature to LCD
 	return
 	
@@ -217,47 +212,14 @@ clock_inc:
 Display_Alarm_Time:
 	movf	alarm_hrs, W, A
 	call Write_Decimal_to_LCD
-	movlw	0x3A
-	call LCD_Write_Character
+	call	Write_colon
 	movf	alarm_min, W, A
 	call Write_Decimal_to_LCD
-	movlw	0x3A
-	call LCD_Write_Character
+	call	Write_colon
 	movf	alarm_sec, W, A
 	call Write_Decimal_to_LCD
 	return
-	
-Display_ALARM:				    ;write the words 'time:' before displaying the time
-	;call delay
-	movlw	11000000B
-	call	LCD_Set_Position	    ;set position in LCD to first line, first character
-	movlw	0x41
-	call	LCD_Write_Character	;write 'A'
-	movlw	0x4C
-	call	LCD_Write_Character	;write 'L'
-	movlw	0x41
-	call	LCD_Write_Character	;write 'A'
-	movlw	0x52
-	call	LCD_Write_Character	;write 'R'
-	movlw   0x4D
-	call    LCD_Write_Character	;write 'M'
-	
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	return	
-	
-Write_space:
-	movlw   0x20
-	call    LCD_Write_Character	;write 'M'
-	return
-    
+	  
 buzzer:	
 	;Initialize
 	bcf	TRISB, 6, A
@@ -324,7 +286,7 @@ cancel_alarm:
 	
 snooze_alarm:
 	clrf	Alarm_buzz, A
-	call	Display_Snooze
+	call	Write_Snooze
 	
 	movlw	0x05
 	addwf	alarm_min, A
@@ -341,38 +303,7 @@ snooze_alarm:
 	subwf	alarm_hrs, 1, 0
 	
 	return
-	
-Display_Snooze:				    ;write the words 'time:' before displaying the time
-	movlw	11000000B
-	call	LCD_Set_Position	    ;set position in LCD to first line, first character
-	movlw	0x53
-	call	LCD_Write_Character	;write 'S'
-	movlw	0x6E
-	call	LCD_Write_Character	;write 'n'
-	movlw	0x6F
-	call	LCD_Write_Character	;write 'o'
-	movlw	0x6F
-	call	LCD_Write_Character	;write 'o'
-	movlw   0x7A
-	call    LCD_Write_Character	;write 'z'
-	movlw   0x65
-	call    LCD_Write_Character	;write 'e'
-	
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	call	Write_space
-	
-	movlw	0x64
-	call	LCD_delay_ms
-	movlw	0x64
-	call	LCD_delay_ms
-	movlw	0x64
-	call	LCD_delay_ms
-	
-	
-	return	
+
 	
 delay_buzzer:
 	movlw   0x20

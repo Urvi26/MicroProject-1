@@ -1,20 +1,20 @@
 #include <xc.inc>
 	
 extrn	Write_Decimal_to_LCD
-extrn	LCD_Clear, LCD_Write_Character, LCD_Write_Hex, operation_check
-extrn	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm
-extrn	LCD_Send_Byte_I, LCD_Send_Byte_D, LCD_Set_Position
-extrn	LCD_Write_Low_Nibble, LCD_Write_High_Nibble, LCD_delay_x4us, LCD_delay_ms
-extrn	Keypad, keypad_val, keypad_ascii
+extrn	LCD_Clear, operation_check
+extrn	LCD_Write_Low_Nibble, LCD_delay_x4us, LCD_delay_ms
+    
+extrn	Keypad, keypad_val
+
 extrn	rewrite_clock
 extrn	clock_sec, clock_min, clock_hrs  
 extrn	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null
-
+extrn	Write_Error, Write_no_alarm, Write_zeros, Write_Time, Write_Temp, Write_Alarm, Write_New
+extrn	Write_colon, Write_space, LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
     
 extrn	alarm_hrs, alarm_min, alarm_sec, Display_Alarm_Time, alarm, alarm_on    
     
 global	temporary_hrs, temporary_min, temporary_sec
-    
 global	Clock, Clock_Setup, operation
     
 psect	udata_acs
@@ -67,48 +67,32 @@ check_cancel:
 
 set_alarm:
 	;call LCD_Clear
-	movlw	00001111B
-	call    LCD_Send_Byte_I
+	call	LCD_cursor_on
 	
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
+	call	LCD_Line2
 	
 	call	Display_Set_Alarm
 	
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
+	call	LCD_Line2
 	
-	movlw	0x4E		    ;character 'N'
-	call	LCD_Write_Character
-	movlw	0x65		    ;character 'e'
-	call	LCD_Write_Character
-	movlw	0x77		    ;character 'w'
-	call	LCD_Write_Character
-
-	movlw	0x3A		    ;character ':'
-	call	LCD_Write_Character
-	movlw	0x20		    ;character ' '
-	call	LCD_Write_Character
+	call	Write_New
 	
-	;call	LCD_Write_Alarm	    ;write 'Time: ' to LCD
+	;call	Write_Alarm	    ;write 'Time: ' to LCD
 	
 	bsf	alarm, 0, A
 	
 	bra set_time_clear	
 	
 set_time: 
-	movlw	00001111B
-	call    LCD_Send_Byte_I
+	call	LCD_cursor_on
     
-	movlw	10000000B	    ;set cursor to first line
-	call	LCD_Set_Position
+	call	LCD_Line1
 	
 	call	Display_Set_Time
 	
-	movlw	10000000B	    ;set cursor to first line
-	call	LCD_Set_Position
+	call	LCD_Line1
 	
-	call	LCD_Write_Time	    ;write 'Time: ' to LCD
+	call	Write_Time	    ;write 'Time: ' to LCD
 	
 	bcf	alarm, 0, A
 	
@@ -159,8 +143,7 @@ set_time2:
 	movff	keypad_val, set_time_hrs2
 	
 	call Write_keypad_val
-	movlw	0x3A		    ;write ':' to LCD
-	call	LCD_Write_Character 
+	call	Write_colon	    ;write ':' to LCD
 	call delay
 set_time3:
 	call input_check	  
@@ -195,8 +178,7 @@ set_time4:
 	movff	keypad_val, set_time_min2
 	
 	call	Write_keypad_val
-	movlw	0x3A		    ;write ':' to LCD
-	call	LCD_Write_Character 
+	call	Write_colon	    ;write ':' to LCD
 	call delay
 set_time5:
 	call input_check	  
@@ -252,8 +234,7 @@ enter_time:
 	
 	;call LCD_Clear
 	
-	movlw	00001100B
-	call    LCD_Send_Byte_I
+	call LCD_cursor_off
 	
 	bcf	operation_check, 0, A
 	bcf	alarm, 0, A
@@ -264,8 +245,7 @@ enter_time:
 	
 cancel:
 	
-	movlw	00001100B
-	call    LCD_Send_Byte_I
+	call	LCD_cursor_off
 	
 	bcf	operation_check, 0, A
 	bcf	alarm, 0, A
@@ -305,95 +285,38 @@ keypad_input_F:
 	
 	
 Display_Set_Time:
-    	movlw	10000000B	    ;set cursor to first line
-	call	LCD_Set_Position
-	call	LCD_Write_Time	    ;write 'Time: ' to LCD
-	call	Display_zeros
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
-	call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
+    	call	LCD_Line1
+	call	Write_Time	    ;write 'Time: ' to LCD
+	call	Write_zeros
+	call	LCD_Line2
+	call	Write_Temp	    ;write 'Temp: ' to LCD
 				    ;Here will write temperature to LCD
 	return
 	
 Display_Set_Alarm:
 	;call	LCD_Clear
     
-    	movlw	10000000B	    ;set cursor to first line
-	call	LCD_Set_Position
+    	call	LCD_Line1
 	
-	call	LCD_Write_Alarm	    ;write 'Alarm: ' to LCD
+	call	Write_Alarm	    ;write 'Alarm: ' to LCD
 	
-	;call	Display_zeros
+	;call	Write_zeros
 	btfss	alarm_on,0, A
-	call	write_no_alarm
+	call	Write_no_alarm
 	btfss	skip_byte,0, A
 	call	Display_Alarm_Time
 	
-	movlw	11000000B	    ;set cursor to first line
-	call	LCD_Set_Position
+	call	LCD_Line2
 	
-	movlw	0x4E		    ;character 'N'
-	call	LCD_Write_Character
-	movlw	0x65		    ;character 'e'
-	call	LCD_Write_Character
-	movlw	0x77		    ;character 'w'
-	call	LCD_Write_Character
+	call	Write_New
 	
-	movlw	0x3A		    ;character ':'
-	call	LCD_Write_Character
-	movlw	0x20		    ;character ' '
-	call	LCD_Write_Character
-	
-	;call	LCD_Write_Alarm	    ;write 'Time: ' to LCD
-	call	Display_zeros
-	;movlw	11000000B	    ;set cursor to first line
-	;call	LCD_Set_Position
-	;call	LCD_Write_Temp	    ;write 'Temp: ' to LCD
+	;call	Write_Alarm	    ;write 'Time: ' to LCD
+	call	Write_zeros
+	;call	LCD_Line2
+	;call	Write_Temp	    ;write 'Temp: ' to LCD
 				    ;Here will write temperature to LCD
 	return
-	
-Display_zeros:
-	movlw	0x0
-	call	LCD_Write_Low_Nibble
-	movlw	0x0
-	call	LCD_Write_Low_Nibble
-	movlw	0x3A		    ;write ':' to LCD
-	call	LCD_Write_Character 
-	movlw	0x0
-	call	LCD_Write_Low_Nibble
-	movlw	0x0
-	call	LCD_Write_Low_Nibble
-	movlw	0x3A		    ;write ':' to LCD
-	call	LCD_Write_Character
-	movlw	0x0
-	call	LCD_Write_Low_Nibble
-	movlw	0x0
-	call	LCD_Write_Low_Nibble
-	return
-	
-write_no_alarm:
-	call delay
-	;movlw	11000110B
-	;call	LCD_Set_Position	    ;set position in LCD to first line, first character
-	movlw   0x4E
-	call    LCD_Write_Character	;write 'N'
-	movlw   0x6F
-	call    LCD_Write_Character	;write 'o'
-	movlw   0x20
-	call    LCD_Write_Character	;write ' '
-	movlw	0x41
-	call	LCD_Write_Character	;write 'A'
-	movlw	0x6C
-	call	LCD_Write_Character	;write 'l'
-	movlw	0x61
-	call	LCD_Write_Character	;write 'a'
-	movlw	0x72
-	call	LCD_Write_Character	;write 'r'
-	movlw   0x6D
-	call    LCD_Write_Character	;write 'm'
-	movlw   0x20
-	call    LCD_Write_Character	;write ' '
-	return	
+
 	
 Write_keypad_val:
 	;movf	keypad_ascii, W
@@ -455,22 +378,12 @@ input_into_alarm:
 	
 	
 output_error:
-	movlw	00001100B
-	call    LCD_Send_Byte_I ;turn off cursor and blinking
+	
+	call    LCD_cursor_off ;turn off cursor and blinking
 
 	call	LCD_Clear
-	movlw	10000000B
-	call	LCD_Set_Position	    ;set position in LCD to first line, first character
-	movlw	0x45
-	call	LCD_Write_Character	;write 'E'
-	movlw	0x72
-	call	LCD_Write_Character	;write 'r'
-	movlw	0x72
-	call	LCD_Write_Character	;write 'r'
-	movlw	0x6F
-	call	LCD_Write_Character	;write 'o'
-	movlw	0x72
-	call	LCD_Write_Character	;write 'r'  
+	call	LCD_Line1	    ;set position in LCD to first line, first character
+	call	Write_Error  
 	movlw	0x64
 	call	delay
 	call	delay

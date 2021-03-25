@@ -1,6 +1,7 @@
 #include <xc.inc>
     
 global  UART_Setup, UART_Transmit_Message
+extrn   LCD_Set_Position, LCD_Write_Character, LCD_Write_Low_Nibble, LCD_delay_ms  
 
 psect	udata_acs   ; reserve data space in access ram
 UART_counter: ds    1	    ; reserve 1 byte for variable UART_counter
@@ -33,4 +34,5 @@ UART_Transmit_Byte:	    ; Transmits byte stored in W
     movwf   TXREG1, A
     return
 
-
+	
+end	
