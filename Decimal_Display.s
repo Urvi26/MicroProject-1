@@ -30,47 +30,47 @@ psect	Hextodec_code,class=CODE
     ;convert hex to decimal;
 Write_Decimal_to_LCD:
 	    ;first multiplication;
-	movwf	in_16x8_8		;preparing inputs for multiplication
+	movwf	in_16x8_8, A		;preparing inputs for multiplication
 		
 	movlw	0xf6
-	movwf	in_16x8_16l
+	movwf	in_16x8_16l, A
 	movlw	0x28
-	movwf	in_16x8_16h
+	movwf	in_16x8_16h, A
 	
 	call  multiply16x8   ;first multiplication of conversion
 		
 	    ;second multiplication;
 	movlw	0x0A	;preparing inputs for multiplication
-	movwf	in_24x8_8    
+	movwf	in_24x8_8, A    
 	
 	movlw	0x0f
 	andwf	out_16x8_h, 0, 1	;preparing inputs for multiplication
-	movwf	in_24x8_24h		
+	movwf	in_24x8_24h, A		
 	movff	out_16x8_m, in_24x8_24m
 	movff	out_16x8_l, in_24x8_24l
 	
 	call	multiply24x8	;second multiplication for conversion
 	
-	movf	out_24x8_lu, W
+	movf	out_24x8_lu, W, A
 	call	LCD_Write_High_Nibble	;display high nibble of most sig byte of answer
 	
 	    ;third multiplication;
 	movlw	0x0f
 	andwf   out_24x8_lu, 0, 1	    ;preparing inputs for multiplication
-	movwf	in_24x8_24h		
+	movwf	in_24x8_24h, A		
 	movff	out_24x8_ul, in_24x8_24m
 	movff	out_24x8_ll, in_24x8_24l
 	
 	call	multiply24x8  ;third multiplication for conversion
 	
-	movf	out_24x8_lu, W
+	movf	out_24x8_lu, W, A
 	call	LCD_Write_High_Nibble	;display high nibble of most sig byte of answer
 	return
 	
 multiply24x8:	
     
-	movf    in_24x8_24l, W
-	mulwf   in_24x8_8
+	movf    in_24x8_24l, W, A
+	mulwf   in_24x8_8, A
 	movff   PRODL, out_24x8_ll
 	movff   PRODH, out_24x8_ul
 
@@ -82,7 +82,7 @@ multiply24x8:
 	movff   out_16x8_m, out_24x8_lu
 	movff   out_16x8_h, out_24x8_uu
 
-	movf    intermediate_24x8, W
+	movf    intermediate_24x8, W, A
 	addwf   out_24x8_ul, 1, 0
 
 	movlw   0x00
@@ -95,19 +95,19 @@ multiply24x8:
 multiply16x8:	
     
 	    ;multiplying 8bit number with least sig byte of 16bit number
-	movf	in_16x8_8, W
-	mulwf	in_16x8_16l	    ;multiply W with 0x21
+	movf	in_16x8_8, W, A
+	mulwf	in_16x8_16l, A	    ;multiply W with 0x21
 	movff	PRODL, out_16x8_l ;store product in file registers
 	movff	PRODH, out_16x8_m
 	
 	    ;multiplying 8 bit number with most sig byte of 16 bit number
-	movf	in_16x8_8, W
-	mulwf	in_16x8_16h	;multiply W with 0x22
+	movf	in_16x8_8, W, A
+	mulwf	in_16x8_16h, A	;multiply W with 0x22
 	movff	PRODL, intermediate_16x8
 	movff	PRODH, out_16x8_h
 	
 	    ;adding products together to get final product;
-	movf	intermediate_16x8, W
+	movf	intermediate_16x8, W, A
 	addwf	out_16x8_m, 1, 0  ; add most sig of first product with least sig of second product and store in 0x21
 	
 	movlw	0x00

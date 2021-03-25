@@ -52,9 +52,9 @@ Temp:
 	;convert hex to decimal;
 Conversion:
 	movlw	0x8A	;preparing inputs for multiplication
-	movwf	in_K_l
+	movwf	in_K_l, A
 	movlw	0x41	;most sig byte of first number
-	movwf	in_K_h
+	movwf	in_K_h, A
 	movff	ADRESH, in_AD_h
 	movff	ADRESL, in_AD_l
 	
@@ -65,13 +65,13 @@ Conversion:
 	
 	
 	movlw	0x0A	;preparing inputs for multiplication
-	movwf	in_24x8_8
+	movwf	in_24x8_8, A
 	
 	movff	out_16x16_lu, in_24x8_24h	;preparing inputs for multiplication
 	movff	out_16x16_ul, in_24x8_24m
 	movff	out_16x16_ll, in_24x8_24l
 	call	multiply24x8	;second multiplication for conversion
-	movf	out_24x8_uu, W
+	movf	out_24x8_uu, W, A
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	
@@ -80,7 +80,7 @@ Conversion:
 	movff	out_24x8_ul, in_24x8_24m
 	movff	out_24x8_ll, in_24x8_24l
 	call	multiply24x8  ;third multiplication for conversion
-	movf	out_24x8_uu, W
+	movf	out_24x8_uu, W, A
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	movlw	0x2E
@@ -90,7 +90,7 @@ Conversion:
 	movff	out_24x8_ul, in_24x8_24m
 	movff	out_24x8_ll, in_24x8_24l
 	call	multiply24x8  ;fourth multiplication for conversion
-	movf	out_24x8_uu, W
+	movf	out_24x8_uu, W, A
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	return
@@ -117,10 +117,10 @@ multiply16x16_ADRES:
 	
 	    ;adding the two products to get final product;
 	    
-	movf	intermediate1_16x16, W	     
+	movf	intermediate1_16x16, W, A	     
 	addwfc	out_16x16_ul, 1, 0	;adding second most sig byte of first product with least sig byte of second prod
 
-	movf	intermediate2_16x16, W
+	movf	intermediate2_16x16, W, A
 	addwfc	out_16x16_lu, 1, 0  ;adding most sig byte of first product with second least sig byte of second prod, with carry
 	
 	movlw	0x00
