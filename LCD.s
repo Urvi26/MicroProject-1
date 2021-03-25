@@ -2,9 +2,10 @@
 
 global  LCD_Setup, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
 global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble
-global	LCD_Write_Time, LCD_Write_Temp, LCD_Write_Alarm, LCD_delay_ms, LCD_delay_x4us
-global	LCD_cursor_off, LCD_cursor_on
-
+global	LCD_delay_ms, LCD_delay_x4us
+global  Write_ALARM, Write_Snooze, Write_Error, Write_zeros, Write_no_alarm, Write_New, Write_colon, Write_space, Write_Time, Write_Temp, Write_Alarm
+global	LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
+    
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h:	ds 1	; reserve 1 byte for variable LCD_cnt_h
@@ -27,27 +28,6 @@ LCD_hex_tmp:	ds 1    ; reserve 1 byte for variable LCD_hex_tmp
 
 	LCD_E	EQU 5	; LCD enable bit
     	LCD_RS	EQU 4	; LCD register select bit
-	
-psect	data
-	
-Time_Message:		;message to display 'Time:'
-    db	    'T', 'i', 'm', 'e', ':', ' ', 0x0a
-    
-    Time_Message_l  EQU	7   ; 'Time:' message length
-    align   2
-    
-Temp_Message:		;message to display 'Temp:'
-    db	    'T', 'e', 'm', 'p', ':', ' ', 0x0a
-    
-    Temp_Message_l  EQU	7 ;'Temp:' message length
-    align   2
-    
-Alarm_Message:		;message to display 'Temp:'
-    db	    'A', 'l', 'a', 'r', 'm', ':', ' ', 0x0a
-    
-    Alarm_Message_l  EQU	8 ;'Temp:' message length
-    align   2
-    
 
 psect	lcd_code,class=CODE
 LCD_Clear: 
@@ -110,7 +90,7 @@ LCD_Line2:
     movlw   11000000B
     call    LCD_Set_Position	;set cursor on
     return
-    
+	
 LCD_Write_Character:	;send ascii code to LCD to display character
 	call	LCD_Send_Byte_D
 	movlw	10	    ; delay 40us
@@ -161,73 +141,6 @@ LCD_Loop_message:
 	decfsz  LCD_counter, A
 	bra	LCD_Loop_message
 	return
-	
-LCD_Write_Time:
-	lfsr	0, myArrayTime
-	movlw	low highword(Time_Message)
-	movwf	TBLPTRU, A
-	movlw	high(Time_Message)
-	movwf	TBLPTRH, A
-	movlw	low(Time_Message)
-	movwf	TBLPTRL, A
-	movlw	Time_Message_l
-	movwf	counter_Time, A
-loop_Time:	tblrd*+
-	movff	TABLAT, POSTINC0
-	decfsz	counter_Time, A
-	bra loop_Time
-	
-	movlw	Time_Message_l
-	lfsr	2, myArrayTime
-	
-	movlw	Time_Message_l-1
-	call	LCD_Write_Message
-	return
-	
-LCD_Write_Temp:
-	lfsr	0, myArrayTemp
-	movlw	low highword(Temp_Message)
-	movwf	TBLPTRU, A
-	movlw	high(Temp_Message)
-	movwf	TBLPTRH, A
-	movlw	low(Temp_Message)
-	movwf	TBLPTRL, A
-	movlw	Temp_Message_l
-	movwf	counter_Temp, A
-loop_Temp:	tblrd*+
-	movff	TABLAT, POSTINC0
-	decfsz	counter_Temp, A
-	bra loop_Temp
-	
-	movlw	Temp_Message_l
-	lfsr	2, myArrayTemp
-	
-	movlw	Temp_Message_l-1
-	call	LCD_Write_Message
-	return
-	
-LCD_Write_Alarm:
-	lfsr	0, myArrayAlarm
-	movlw	low highword(Alarm_Message)
-	movwf	TBLPTRU, A
-	movlw	high(Alarm_Message)
-	movwf	TBLPTRH, A
-	movlw	low(Alarm_Message)
-	movwf	TBLPTRL, A
-	movlw	Alarm_Message_l
-	movwf	counter_Alarm, A
-loop_Alarm:	tblrd*+
-	movff	TABLAT, POSTINC0
-	decfsz	counter_Alarm, A
-	bra loop_Alarm
-	
-	movlw	Alarm_Message_l
-	lfsr	2, myArrayAlarm
-	
-	movlw	Alarm_Message_l-1
-	call	LCD_Write_Message
-	return
-
 
 LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
 	movwf   LCD_tmp, A
@@ -306,20 +219,206 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	bc 	lcdlp1		; carry, then loop again
 	return			; carry reset so return
 
-delay:	call delayb
-	decfsz	0x21
-	bra delay
-	return
+ 
+Write_ALARM:				    ;write the words 'time:' before displaying the time
+	;call delay
+	movlw	11000000B
+	call	LCD_Set_Position	    ;set position in LCD to first line, first character
+	movlw	'A'
+	call	LCD_Write_Character	;write 'A'
+	movlw	'L'
+	call	LCD_Write_Character	;write 'L'
+	movlw	'A'
+	call	LCD_Write_Character	;write 'A'
+	movlw	'R'
+	call	LCD_Write_Character	;write 'R'
+	movlw   'M'
+	call    LCD_Write_Character	;write 'M'
 	
-delayb:	;call delayc
-	decfsz	0x22
-	bra delayb
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
 	return	
 	
-delayc: decfsz	0x23
-	bra delayc
+ Write_Snooze:				    ;write the words 'time:' before displaying the time
+	movlw	11000000B
+	call	LCD_Set_Position	    ;set position in LCD to first line, first character
+	movlw	'S'
+	call	LCD_Write_Character	;write 'S'
+	movlw	'n'
+	call	LCD_Write_Character	;write 'n'
+	movlw	'o'
+	call	LCD_Write_Character	;write 'o'
+	movlw	'o'
+	call	LCD_Write_Character	;write 'o'
+	movlw   'z'
+	call    LCD_Write_Character	;write 'z'
+	movlw   'e'
+	call    LCD_Write_Character	;write 'e'
+	
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	call	Write_space
+	
+	call delay	
+	return	   
+
+Write_error:
+	
+	movlw	'E'
+	call	LCD_Write_Character	;write 'E'
+	movlw	'r'
+	call	LCD_Write_Character	;write 'r'
+	movlw	'r'
+	call	LCD_Write_Character	;write 'r'
+	movlw	'o'
+	call	LCD_Write_Character	;write 'o'
+	movlw	'r'
+	call	LCD_Write_Character	;write 'r'  
+	
+	return
+	
+Write_Error:
+	
+	movlw	'E'
+	call	LCD_Write_Character	;write 'E'
+	movlw	'r'
+	call	LCD_Write_Character	;write 'r'
+	movlw	'r'
+	call	LCD_Write_Character	;write 'r'
+	movlw	'o'
+	call	LCD_Write_Character	;write 'o'
+	movlw	'r'
+	call	LCD_Write_Character	;write 'r'  
+	call delay
+	return
+	
+Write_Time:
+	
+	movlw	'T'
+	call	LCD_Write_Character	;write 'T'
+	movlw	'i'
+	call	LCD_Write_Character	;write 'i'
+	movlw	'm'
+	call	LCD_Write_Character	;write 'm'
+	movlw	'e'
+	call	LCD_Write_Character	;write 'e'
+	    
+	call	Write_colon		;write ':'
+	
+	return
+	
+Write_Temp:
+	movlw	'T'
+	call	LCD_Write_Character	;write 'T'
+	movlw	'e'
+	call	LCD_Write_Character	;write 'e'
+	movlw	'm'
+	call	LCD_Write_Character	;write 'm'
+	movlw	'p'
+	call	LCD_Write_Character	;write 'p'
+	    
+	call	Write_colon		;write ':'
+	
+	return
+	
+Write_Alarm:
+	movlw	'A'
+	call	LCD_Write_Character	;write 'A'
+	movlw	'l'
+	call	LCD_Write_Character	;write 'l'
+	movlw	'a'
+	call	LCD_Write_Character	;write 'a'
+	movlw	'r'
+	call	LCD_Write_Character	;write 'r'
+	movlw   'm'
+	call    LCD_Write_Character	;write 'm'
+	
+	call	Write_colon		;write ':'
+	
+	return
+	
+Write_zeros:
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	call	Write_colon 
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	call	Write_colon
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	movlw	0x0
+	call	LCD_Write_Low_Nibble
+	return
+	
+Write_no_alarm:
+	call delay
+	;movlw	11000110B
+	;call	LCD_Set_Position	    ;set position in LCD to first line, first character
+	movlw   'N'
+	call    LCD_Write_Character	;write 'N'
+	movlw   'o'
+	call    LCD_Write_Character	;write 'o'
+	call	Write_space
+	movlw	'A'
+	call	LCD_Write_Character	;write 'A'
+	movlw	'l'
+	call	LCD_Write_Character	;write 'l'
+	movlw	'a'
+	call	LCD_Write_Character	;write 'a'
+	movlw	'r'
+	call	LCD_Write_Character	;write 'r'
+	movlw   'm'
+	call    LCD_Write_Character	;write 'm'
+	call	Write_space
+	return	
+
+Write_New:
+	movlw	'N'		    ;character 'N'
+	call	LCD_Write_Character
+	movlw	'e'		    ;character 'e'
+	call	LCD_Write_Character
+	movlw	'w'		    ;character 'w'
+	call	LCD_Write_Character
+	call	Write_colon
+	call	Write_space
 	return
 
+Write_colon:
+	movlw	':'		    ;character ':'
+	call	LCD_Write_Character
+	return
+	
+Write_space:
+	movlw   ' '
+	call    LCD_Write_Character	;write ' '
+	return
+
+	
+delay:	
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	movlw	0x64
+	call	LCD_delay_ms
+	return
+	
+	
 end
 
 

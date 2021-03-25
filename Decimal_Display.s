@@ -1,7 +1,7 @@
 #include <xc.inc>
 
 extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Write_High_Nibble ; external LCD subroutines
-global	Write_Decimal_to_LCD, multiply16x8, multiply24x8
+global	Write_Decimal_to_LCD, Multiply16x8, Multiply24x8
 global	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_ll, out_24x8_ul, out_24x8_lu, out_24x8_uu, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
     
 psect	udata_acs   ; reserve data space in access ram
@@ -37,7 +37,7 @@ Write_Decimal_to_LCD:
 	movlw	0x28
 	movwf	in_16x8_16h, A
 	
-	call  multiply16x8   ;first multiplication of conversion
+	call  Multiply16x8   ;first multiplication of conversion
 		
 	    ;second multiplication;
 	movlw	0x0A	;preparing inputs for multiplication
@@ -49,7 +49,7 @@ Write_Decimal_to_LCD:
 	movff	out_16x8_m, in_24x8_24m
 	movff	out_16x8_l, in_24x8_24l
 	
-	call	multiply24x8	;second multiplication for conversion
+	call	Multiply24x8	;second multiplication for conversion
 	
 	movf	out_24x8_lu, W, A
 	call	LCD_Write_High_Nibble	;display high nibble of most sig byte of answer
@@ -61,13 +61,13 @@ Write_Decimal_to_LCD:
 	movff	out_24x8_ul, in_24x8_24m
 	movff	out_24x8_ll, in_24x8_24l
 	
-	call	multiply24x8  ;third multiplication for conversion
+	call	Multiply24x8  ;third multiplication for conversion
 	
 	movf	out_24x8_lu, W, A
 	call	LCD_Write_High_Nibble	;display high nibble of most sig byte of answer
 	return
 	
-multiply24x8:	
+Multiply24x8:	
     
 	movf    in_24x8_24l, W, A
 	mulwf   in_24x8_8, A
@@ -77,7 +77,7 @@ multiply24x8:
 	movff   in_24x8_8, in_16x8_8
 	movff   in_24x8_24m, in_16x8_16l
 	movff   in_24x8_24h, in_16x8_16h
-	call    multiply16x8
+	call    Multiply16x8
 	movff   out_16x8_l, intermediate_24x8
 	movff   out_16x8_m, out_24x8_lu
 	movff   out_16x8_h, out_24x8_uu
@@ -92,7 +92,7 @@ multiply24x8:
 	addwfc  out_24x8_uu,   1,0
 	return
 
-multiply16x8:	
+Multiply16x8:	
     
 	    ;multiplying 8bit number with least sig byte of 16bit number
 	movf	in_16x8_8, W, A

@@ -1,9 +1,9 @@
 #include <xc.inc>
 
 extrn	Clock_Setup, Clock
-extrn	operation
+extrn	operation, Operation_Setup
 extrn	LCD_Setup, LCD_Clear
-extrn	Keypad, keypad_val
+extrn	Keypad, keypad_val, keypad_ascii
   
 global	operation_check
     
@@ -22,13 +22,13 @@ int_hi:	org	0x0008	; high vector, no low vector
 start:
 	call	LCD_Setup
 	call	Clock_Setup
-	
-	clrf	operation_check
+	call	Operation_Setup
+	clrf	operation_check, A
 	
 settings_clock:
 	call	Keypad
 	movlw	0x0f
-	CPFSEQ	keypad_val
+	CPFSEQ	keypad_val, A
 	bra	settings_clock
 	
 	call	operation
