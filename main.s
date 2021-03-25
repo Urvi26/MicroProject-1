@@ -23,12 +23,12 @@ start:
 	call	LCD_Setup
 	call	Clock_Setup
 	
-	clrf	operation_check
+	clrf	operation_check, A
 	
 settings_clock:
 	call	Keypad
 	movlw	0x0f
-	CPFSEQ	keypad_val
+	CPFSEQ	keypad_val, A
 	bra	settings_clock
 	
 	call	operation

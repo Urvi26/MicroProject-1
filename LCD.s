@@ -286,16 +286,16 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	return			; carry reset so return
 
 delay:	call delayb
-	decfsz	0x21
+	decfsz	0x21, A
 	bra delay
 	return
 	
 delayb:	;call delayc
-	decfsz	0x22
+	decfsz	0x22, A
 	bra delayb
 	return	
 	
-delayc: decfsz	0x23
+delayc: decfsz	0x23, A
 	bra delayc
 	return
 

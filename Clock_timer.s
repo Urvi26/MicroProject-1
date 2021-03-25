@@ -55,9 +55,9 @@ psect	Clock_timer_code, class=CODE
 
 Clock_Setup: 
 	movlw	0x00		;setting start time to 00:00:00
-	movwf   clock_sec
-	movwf   clock_min
-	movwf   clock_hrs
+	movwf   clock_sec, A
+	movwf   clock_min, A
+	movwf   clock_hrs, A
 	
 	;Temp Port A setup
 	;bcf	TRISA, 3
@@ -65,44 +65,44 @@ Clock_Setup:
 	call	ADC_Setup
 	
 	movlw	0x01	;;;;;
-	movwf	alarm_sec
-	movwf	alarm_min
-	movwf	alarm_hrs
+	movwf	alarm_sec, A
+	movwf	alarm_min, A
+	movwf	alarm_hrs, A
 	
-	bcf	alarm, 0
-	bcf	alarm_on, 0
-	bcf	buzz_bit, 0
+	bcf	alarm, 0, A
+	bcf	alarm_on, 0, A
+	bcf	buzz_bit, 0, A
 	
-	clrf	Alarm_buzz
+	clrf	Alarm_buzz, A
 	
-	bsf	skip_byte, 0
+	bsf	skip_byte, 0, A
 	
 	call	rewrite_clock
 	
 	movlw	0x3C		;setting hex values for decimal 24 and 60 for comparison
-	movwf	check_60
+	movwf	check_60, A
 	movlw	0x18
-	movwf	check_24
+	movwf	check_24, A
 	
 	movlw	0x0A		;storing keypad character hex values
-	movwf	hex_A
+	movwf	hex_A, A
 	movlw	0x0B
-	movwf	hex_B
+	movwf	hex_B, A
 	movlw	0x0C
-	movwf	hex_C
+	movwf	hex_C, A
 	movlw	0x0D
-	movwf	hex_D
+	movwf	hex_D, A
 	movlw	0x0E
-	movwf	hex_E
+	movwf	hex_E, A
 	movlw	0x0F
-	movwf	hex_F
+	movwf	hex_F, A
 	movlw	0xff
-	movwf	hex_null
+	movwf	hex_null, A
 	
 	movlw	0x0B
-	movwf	timer_start_value_1
+	movwf	timer_start_value_1, A
 	movlw	0xDB
-	movwf	timer_start_value_2
+	movwf	timer_start_value_2, A
 	
 	movlw	10000111B	; Set timer1 to 16-bit, Fosc/4/256
 	movwf	T0CON, A	; = 62.5KHz clock rate, approx 1sec rollover
@@ -118,37 +118,37 @@ Clock:
 	movff	timer_start_value_1, TMR0H	;setting upper byte timer start value
 	movff	timer_start_value_2, TMR0L		;setting lower byte timer start value
 	bcf	TMR0IF		; clear interrupt flag
-	btfss	operation_check, 0 ;skip rewrite clock if = 1
+	btfss	operation_check, 0, A ;skip rewrite clock if = 1
 	call	rewrite_clock	;write and display clock time as decimal on LCD 
 	call	check_alarm
 	retfie	f		; fast return from interrupt	
 	
 check_alarm:
 	movlw	0x00
-	cpfseq	Alarm_buzz
+	cpfseq	Alarm_buzz, A
 	bra	decrement_alarm_buzz
 	bra	compare_alarm
 
 decrement_alarm_buzz:
-	decf	Alarm_buzz
+	decf	Alarm_buzz, A
 	call	ALARM
 	return
 	
 compare_alarm:  
-	btfss	alarm_on, 0
+	btfss	alarm_on, 0, A
 	return
-	movf	alarm_hrs, W
-	CPFSEQ	clock_hrs
+	movf	alarm_hrs, W, A
+	CPFSEQ	clock_hrs, A
 	return
-	movf	alarm_min, W
-	CPFSEQ	clock_min
+	movf	alarm_min, W, A
+	CPFSEQ	clock_min, A
 	return
-	movf	alarm_sec, W
-	CPFSEQ	clock_sec
+	movf	alarm_sec, W, A
+	CPFSEQ	clock_sec, A
 	return
 	
 	movlw	0x3C
-	movwf	Alarm_buzz
+	movwf	Alarm_buzz, A
 	
 	call ALARM
 	return
@@ -163,14 +163,14 @@ ALARM:
 	return	
 		
 check_buzz_bit:
-	btfsc	buzz_bit, 0
+	btfsc	buzz_bit, 0, A
 	bra	clear_buzz_bit
 	bra	set_buzz_bit
 clear_buzz_bit:	
-	bcf	buzz_bit, 0
+	bcf	buzz_bit, 0, A
 	return
 set_buzz_bit:
-	bsf	buzz_bit, 0
+	bsf	buzz_bit, 0, A
 	return
 	
 	
@@ -178,15 +178,15 @@ rewrite_clock:
 	movlw	10000000B	    ;set cursor to first line
 	call	LCD_Set_Position
 	call	LCD_Write_Time	    ;write 'Time: ' to LCD
-	movf	clock_hrs, W	    ;write hours time to LCD as decimal
+	movf	clock_hrs, W, A	    ;write hours time to LCD as decimal
 	call	Write_Decimal_to_LCD  
 	movlw	0x3A		    ;write ':' to LCD
 	call	LCD_Write_Character 
-	movf	clock_min, W	    ;write minutes time to LCD as decimal
+	movf	clock_min, W, A	    ;write minutes time to LCD as decimal
 	call	Write_Decimal_to_LCD
 	movlw	0x3A		    ;write ':' to LCD
 	call	LCD_Write_Character
-	movf	clock_sec, W	    ;write seconds time to LCD as decimal
+	movf	clock_sec, W, A	    ;write seconds time to LCD as decimal
 	call	Write_Decimal_to_LCD
 	movlw	11000000B	    ;set cursor to first line
 	call	LCD_Set_Position
@@ -196,34 +196,34 @@ rewrite_clock:
 	
 
 clock_inc:	
-	incf	clock_sec	    ;increase seconds time by one
-	movf	clock_sec, W	   
-	cpfseq	check_60	    ;check clock seconds is equal than 60
+	incf	clock_sec, A	    ;increase seconds time by one
+	movf	clock_sec, W, A	   
+	cpfseq	check_60, A	    ;check clock seconds is equal than 60
 	return			    ;return if not equal to 60
-	clrf	clock_sec	    ;set second time to 0 if was equal to 60
-	incf	clock_min	    ;increase minute time by one
-	movf	clock_min, W
-	cpfseq	check_60	    ;check if minute time equal to 60
+	clrf	clock_sec, A	    ;set second time to 0 if was equal to 60
+	incf	clock_min, A	    ;increase minute time by one
+	movf	clock_min, W, A
+	cpfseq	check_60, A	    ;check if minute time equal to 60
 	return
-	clrf	clock_min	    ;set minute time to 0 if = 60
-	incf	clock_hrs	    ;increase hour time by one
-	movf	clock_hrs, W	
-	cpfseq	check_24	    ;check if hour time equal to 24
+	clrf	clock_min, A	    ;set minute time to 0 if = 60
+	incf	clock_hrs, A	    ;increase hour time by one
+	movf	clock_hrs, W, A	
+	cpfseq	check_24, A	    ;check if hour time equal to 24
 	return	
-	clrf	clock_hrs	    ;set hour time to 0 if = 24
+	clrf	clock_hrs, A	    ;set hour time to 0 if = 24
 	return
 	
 	
 Display_Alarm_Time:
-	movf	alarm_hrs, W
+	movf	alarm_hrs, W, A
 	call Write_Decimal_to_LCD
 	movlw	0x3A
 	call LCD_Write_Character
-	movf	alarm_min, W
+	movf	alarm_min, W, A
 	call Write_Decimal_to_LCD
 	movlw	0x3A
 	call LCD_Write_Character
-	movf	alarm_sec, W
+	movf	alarm_sec, W, A
 	call Write_Decimal_to_LCD
 	return
 	
@@ -260,38 +260,38 @@ Write_space:
     
 buzzer:	
 	;Initialize
-	bcf	TRISB, 6
+	bcf	TRISB, 6, A
 	
 	movlw	0x64
-	movwf	buzzer_counter_1
+	movwf	buzzer_counter_1, A
 	movlw	0x1E
-	movwf	buzzer_counter_2
+	movwf	buzzer_counter_2, A
 
 buzz_loop_1:
     
 check_cancel_snooze:
 	call	Keypad
-	movf	keypad_val, W
-	CPFSEQ	hex_C
-	btfss	skip_byte, 0
+	movf	keypad_val, W, A
+	CPFSEQ	hex_C, A
+	btfss	skip_byte, 0, A
 	bra	cancel_alarm
-	CPFSEQ	hex_A
-	btfss	skip_byte, 0
+	CPFSEQ	hex_A, A
+	btfss	skip_byte, 0, A
 	bra	snooze_alarm	    
    
 
 	call	buzz_loop_2
 	movlw	0x1E
-	movwf	buzzer_counter_2
+	movwf	buzzer_counter_2, A
 	
-	decfsz	buzzer_counter_1
+	decfsz	buzzer_counter_1, A
 	bra	buzz_loop_1
 	return
     
 buzz_loop_2:
 	call	buzz_sequence
     
-	decfsz	buzzer_counter_2
+	decfsz	buzzer_counter_2, A
 	bra	buzz_loop_2	
 	return
 	
@@ -300,7 +300,7 @@ buzz_loop_2:
 buzz_sequence:	
     
 check_if_buzz:
-	btfss	buzz_bit, 0
+	btfss	buzz_bit, 0, A
 	bra	no_buzz
 	bra	yes_buzz
 	
@@ -310,35 +310,35 @@ no_buzz:
 	return
 	
 yes_buzz:	
-	bsf	LATB, 6	;Ouput high
+	bsf	LATB, 6, A	;Ouput high
 	call	delay_buzzer
-	bcf	LATB, 6	;Ouput low
+	bcf	LATB, 6, A	;Ouput low
 	call	delay_buzzer
 	return	
 	
 	
 	
 cancel_alarm:
-	clrf	Alarm_buzz
+	clrf	Alarm_buzz, A
 	return
 	
 snooze_alarm:
-	clrf	Alarm_buzz
+	clrf	Alarm_buzz, A
 	call	Display_Snooze
 	
 	movlw	0x05
-	addwf	alarm_min
+	addwf	alarm_min, A
 	movlw	0x3B
-	cpfsgt	alarm_min
+	cpfsgt	alarm_min, A
 	return
 	movlw	0x3C
-	subwf	alarm_min, 1
-	incf	alarm_hrs
+	subwf	alarm_min, 1, 0	;result stored back in f
+	incf	alarm_hrs, A
 	movlw	0x17
-	cpfsgt	alarm_hrs
+	cpfsgt	alarm_hrs, A
 	return
 	movlw	0x18
-	subwf	alarm_hrs, 1
+	subwf	alarm_hrs, 1, 0
 	
 	return
 	

@@ -29,18 +29,18 @@ psect	Hextodec_code,class=CODE
     ;convert hex to decimal;
 Write_Decimal_to_LCD:
 	    ;first multiplication;
-	movwf	small		;preparing inputs for multiplication
+	movwf	small, A		;preparing inputs for multiplication
 		
 	movlw	0xf6
-	movwf	bigl
+	movwf	bigl, A
 	movlw	0x28
-	movwf	bigh
+	movwf	bigh, A
 	
 	call  multiply16x8   ;first multiplication of conversion
 		
 	    ;second multiplication;
 	movlw	0x0A	;preparing inputs for multiplication
-	movwf	ein    
+	movwf	ein, A    
 	
 	movlw	0x0f
 	andwf	seouth, 0, 1	;preparing inputs for multiplication
