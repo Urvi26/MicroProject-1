@@ -11,7 +11,7 @@ extrn	clock_sec, clock_min, clock_hrs
 extrn	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null
     
 extrn	alarm_hrs, alarm_min, alarm_sec
-extrn	Display_Alarm_Time, alarm_on    
+extrn	alarm_on    
 extrn	Write_Error, Write_no_alarm, Write_zeros, Write_Time, Write_Temp, Write_Alarm, Write_New
 extrn	Write_colon, Write_space, LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
 global	temporary_hrs, temporary_min, temporary_sec
@@ -319,6 +319,16 @@ Display_Set_Alarm:
 				    ;Here will write temperature to LCD
 	return
 
+Display_Alarm_Time:
+	movf	alarm_hrs, W, A
+	call Write_Decimal_to_LCD
+	call	Write_colon
+	movf	alarm_min, W, A
+	call Write_Decimal_to_LCD
+	call	Write_colon
+	movf	alarm_sec, W, A
+	call Write_Decimal_to_LCD
+	return
 	
 Write_keypad_val:
 	;movf	keypad_ascii, W

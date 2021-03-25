@@ -15,7 +15,7 @@ extrn	LCD_Line2, LCD_Line1
 global	clock_sec, clock_min, clock_hrs
 global	Clock, Clock_Setup, Rewrite_Clock
 global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null  
-global	alarm_hrs, alarm_min, alarm_sec, Display_Alarm_Time, alarm_on, skip_byte, check_24, check_60
+global	alarm_hrs, alarm_min, alarm_sec, alarm_on, skip_byte, check_24, check_60
     
 psect	udata_acs
 clock_hrs: ds 1
@@ -101,7 +101,42 @@ alarm_setup:
 	clrf	alarm_buzz, A
 	
 	return
-    
+			
+Rewrite_Clock:
+	call	LCD_Line1
+	call	Write_Time	    ;write 'Time: ' to LCD
+	movf	clock_hrs, W, A	    ;write hours time to LCD as decimal
+	call	Write_Decimal_to_LCD  
+	call	Write_colon	    ;write ':' to LCD
+	movf	clock_min, W, A	    ;write minutes time to LCD as decimal
+	call	Write_Decimal_to_LCD
+	call	Write_colon	    ;write ':' to LCD
+	movf	clock_sec, W, A	    ;write seconds time to LCD as decimal
+	call	Write_Decimal_to_LCD
+	call	LCD_Line2
+	call	Write_Temp	    ;write 'Temp: ' to LCD
+	call	Temp		    ;Here will write temperature to LCD
+	return
+	
+
+Clock_Inc:	
+	incf	clock_sec, A	    ;increase seconds time by one
+	movf	clock_sec, W, A	   
+	cpfseq	check_60, A	    ;check clock seconds is equal than 60
+	return			    ;return if not equal to 60
+	clrf	clock_sec, A	    ;set second time to 0 if was equal to 60
+	incf	clock_min, A	    ;increase minute time by one
+	movf	clock_min, W, A
+	cpfseq	check_60, A	    ;check if minute time equal to 60
+	return
+	clrf	clock_min, A	    ;set minute time to 0 if = 60
+	incf	clock_hrs, A	    ;increase hour time by one
+	movf	clock_hrs, W, A	
+	cpfseq	check_24, A	    ;check if hour time equal to 24
+	return	
+	clrf	clock_hrs, A	    ;set hour time to 0 if = 24
+	return
+	    
 Clock:	
 	btfss	TMR0IF		; check that this is timer0 interrupt
 	retfie	f		; if not then return
@@ -151,53 +186,6 @@ ALARM:
 	call	Buzzer
 
 	return	
-			
-Rewrite_Clock:
-	call	LCD_Line1
-	call	Write_Time	    ;write 'Time: ' to LCD
-	movf	clock_hrs, W, A	    ;write hours time to LCD as decimal
-	call	Write_Decimal_to_LCD  
-	call	Write_colon	    ;write ':' to LCD
-	movf	clock_min, W, A	    ;write minutes time to LCD as decimal
-	call	Write_Decimal_to_LCD
-	call	Write_colon	    ;write ':' to LCD
-	movf	clock_sec, W, A	    ;write seconds time to LCD as decimal
-	call	Write_Decimal_to_LCD
-	call	LCD_Line2
-	call	Write_Temp	    ;write 'Temp: ' to LCD
-	call	Temp		    ;Here will write temperature to LCD
-	return
-	
-
-Clock_Inc:	
-	incf	clock_sec, A	    ;increase seconds time by one
-	movf	clock_sec, W, A	   
-	cpfseq	check_60, A	    ;check clock seconds is equal than 60
-	return			    ;return if not equal to 60
-	clrf	clock_sec, A	    ;set second time to 0 if was equal to 60
-	incf	clock_min, A	    ;increase minute time by one
-	movf	clock_min, W, A
-	cpfseq	check_60, A	    ;check if minute time equal to 60
-	return
-	clrf	clock_min, A	    ;set minute time to 0 if = 60
-	incf	clock_hrs, A	    ;increase hour time by one
-	movf	clock_hrs, W, A	
-	cpfseq	check_24, A	    ;check if hour time equal to 24
-	return	
-	clrf	clock_hrs, A	    ;set hour time to 0 if = 24
-	return
-	
-	
-Display_Alarm_Time:
-	movf	alarm_hrs, W, A
-	call Write_Decimal_to_LCD
-	call	Write_colon
-	movf	alarm_min, W, A
-	call Write_Decimal_to_LCD
-	call	Write_colon
-	movf	alarm_sec, W, A
-	call Write_Decimal_to_LCD
-	return
 	  
 Buzzer:	
 	;Initialize
@@ -237,9 +225,7 @@ Buzz_Loop_2:
 	return
 	
 	
-	
 Buzz_Sequence:	
-    
 Check_if_Buzz:
 	btfss	buzz_bit, 0, A
 	bra	No_Buzz
@@ -256,8 +242,6 @@ Yes_Buzz:
 	bcf	LATB, 6, A	;Ouput low
 	call	delay_buzzer
 	return	
-	
-	
 	
 Cancel_Alarm:
 	clrf	alarm_buzz, A
