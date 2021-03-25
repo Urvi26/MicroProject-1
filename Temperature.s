@@ -5,6 +5,7 @@
 extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Send_Byte_D
 extrn	LCD_Write_Hex, LCD_Write_Character, LCD_Write_Low_Nibble ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
+extrn	multiply24x8, multiply16x8 
     
 global	Temp
 	
@@ -22,6 +23,7 @@ ssouth:	ds 1	;16x16, second highest byte output
 ssouthh:ds 1	;16x16, high byte output
 ssoutil:ds 1	;16x16, intermediate used while multiplying
 ssoutih: ds 1	;16x16, intermediate used while multiplying
+
 seoutl:	ds 1	;16x8, low byte output
 seoutm:	ds 1	;16x8, middle byte output
 seouth:	ds 1	;16x8, high byte output
@@ -44,6 +46,11 @@ Temp:
 	;call	LCD_Set_Position	; sets position on LCD
 	call	ADC_Read	; reads voltage value and stores in ADRESH:ADRESL
 	
+	;movf	ADRESH, W
+	;call LCD_Write_Hex
+	;call delay
+	;movf	ADRESL, W
+	;call LCD_Write_Hex
 	call	Conversion	;converst from hex to decimal
 	
 	movlw	10110010B
@@ -97,32 +104,6 @@ Conversion:
 	
 	return
 	
-multiply24x8:	
-    
-	movf    tinl, W
-	mulwf   ein
-	movff   PRODL, teoutll
-	movff   PRODH, teoutl
-
-	movff   ein, small
-	movff   tinm, bigl
-	movff   tinh, bigh
-	call    multiply16x8
-	movff   seoutl, teouti
-	movff   seoutm, teouth
-	movff   seouth, teouthh
-
-	movf    teouti, W
-	addwf   teoutl, 1, 0
-
-	movlw   0x00
-	addwfc  teouth, 1,0
-
-	movlw   0x00
-	addwfc  teouthh,   1,0
-	return
-
-    
 multiply16x16_ADRES:
 	   ;multiplying least sig byte of first number with second number;
 	   

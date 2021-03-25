@@ -156,23 +156,23 @@ ALARM:
 	call	LCD_Set_Position
 	call	Display_ALARM	    ;display alarm while alarm is ringing
 	
-	call	check_buzz_bit	    ;check the buzz_bit to set it if it was clear and to clear it if it was set
-	;BTG	buzz_bit, 0
+	;call	check_buzz_bit	    ;check the buzz_bit to set it if it was clear and to clear it if it was set
+	BTG	buzz_bit, 0
 	
 	call	buzzer		    ;call buzzer which buzzes when the buzz_bit is set
 
 	return	
 		
-check_buzz_bit:
-	btfsc	buzz_bit, 0		;check if buzz bit is set
-	bra	clear_buzz_bit		;branch to set it if it isnt set
-	bra	set_buzz_bit		;branch to clear it if it is set
-clear_buzz_bit:	
-	bcf	buzz_bit, 0		;clear buzz_bit 
-	return
-set_buzz_bit:
-	bsf	buzz_bit, 0		;set buzz_bit
-	return
+;check_buzz_bit:
+;	btfsc	buzz_bit, 0		;check if buzz bit is set
+;	bra	clear_buzz_bit		;branch to set it if it isnt set
+;	bra	set_buzz_bit		;branch to clear it if it is set
+;clear_buzz_bit:	
+;	bcf	buzz_bit, 0		;clear buzz_bit 
+;	return
+;set_buzz_bit:
+;	bsf	buzz_bit, 0		;set buzz_bit
+;	return
 
 ;try instead of line 166-175?	
 	;BTG	buzz_bit, 0

@@ -7,11 +7,11 @@ global  ADC_Setup, ADC_Read
 psect	adc_code, class=CODE
     
 ADC_Setup:
-	bsf	TRISA, PORTA_RA3_POSN, A  ; pin RA0==AN0 input
+	bsf	TRISA, 4, A;PORTA_RA0_POSN, A  ; pin RA0==AN0 input
 	bsf	ANSEL3	    ; set AN0 to analog
 	movlw   00001101B   ; select AN0 for measurement
 	movwf   ADCON0, A   ; and turn ADC on
-	movlw   0x00	    ; Select 4.096V positive reference
+	movlw   0x30	    ; Select 4.096V positive reference
 	movwf   ADCON1,	A   ; 0V for -ve reference and -ve input
 	movlw   0xF6	    ; Right justified output
 	movwf   ADCON2, A   ; Fosc/64 clock and acquisition times
