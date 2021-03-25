@@ -8,16 +8,15 @@ extrn	Keypad, keypad_val
 
 extrn	Rewrite_Clock
 extrn	clock_sec, clock_min, clock_hrs  
-extrn	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null
     
 extrn	alarm_hrs, alarm_min, alarm_sec
 extrn	alarm_on    
 extrn	Write_Error, Write_no_alarm, Write_zeros, Write_Time, Write_Temp, Write_Alarm, Write_New
 extrn	Write_colon, Write_space, LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
+
 global	temporary_hrs, temporary_min, temporary_sec
 global	Clock, Clock_Setup, operation, Operation_Setup, skip_byte, check_60, check_24
-    
-
+global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null
     
     
 psect	udata_acs
@@ -41,13 +40,35 @@ timer_start_value_2: ds 1
 skip_byte:	ds 1
 
     
+hex_A:	ds 1
+hex_B:	ds 1
+hex_C:	ds 1
+hex_D:	ds 1
+hex_E:	ds 1
+hex_F:	ds 1
+hex_null:   	ds  1
+   
 alarm: ds 1      
-    
+
 psect	Operations_code, class=CODE
 
 Operation_Setup:
 	bcf	alarm, 0, A
 	bcf	skip_byte,  0, A	    ;set skip byte to zero to be used to skip lines later
+	movlw	0x0A		;storing keypad character hex values
+	movwf	hex_A, A
+	movlw	0x0B
+	movwf	hex_B, A
+	movlw	0x0C
+	movwf	hex_C, A
+	movlw	0x0D
+	movwf	hex_D, A
+	movlw	0x0E
+	movwf	hex_E, A
+	movlw	0x0F
+	movwf	hex_F, A
+	movlw	0xff
+	movwf	hex_null, A
 	return
 
 operation:
@@ -386,13 +407,9 @@ Input_into_Alarm:
 	bsf	alarm_on, 0, A
 	;call	Rewrite_Clock
 	return
-	
-	
-	
-Output_Error:
-	
-	call    LCD_cursor_off ;turn off cursor and blinking
 
+Output_Error:
+	call    LCD_cursor_off ;turn off cursor and blinking
 	call	LCD_Clear
 	call	LCD_Line1	    ;set position in LCD to first line, first character
 	call	Write_Error  

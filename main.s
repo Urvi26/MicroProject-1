@@ -4,7 +4,8 @@ extrn	Clock_Setup, Clock
 extrn	operation, Operation_Setup
 extrn	LCD_Setup, LCD_Clear
 extrn	Keypad, keypad_val, keypad_ascii
-  
+extrn	Alarm_Setup
+    
 global	operation_check
     
 psect	udata_acs
@@ -23,6 +24,7 @@ start:
 	call	LCD_Setup
 	call	Clock_Setup
 	call	Operation_Setup
+	call	Alarm_Setup
 	clrf	operation_check, A
 	
 settings_clock:
