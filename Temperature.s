@@ -1,7 +1,6 @@
 #include <xc.inc>
     
     
-;extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Send_Byte_D
 extrn	LCD_Write_Hex, LCD_Write_Character, LCD_Write_Low_Nibble ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines

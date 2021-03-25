@@ -16,7 +16,7 @@ extrn	Write_colon, Write_space, LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Li
 
 global	temporary_hrs, temporary_min, temporary_sec
 global	Clock, Clock_Setup, operation, Operation_Setup, skip_byte, check_60, check_24
-global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null
+global	hex_A, hex_C
     
     
 psect	udata_acs
@@ -352,8 +352,6 @@ Display_Alarm_Time:
 	return
 	
 Write_keypad_val:
-	;movf	keypad_ascii, W
-	;call	LCD_Write_Character
 	movf	keypad_val, A
 	call	LCD_Write_Low_Nibble
 	return

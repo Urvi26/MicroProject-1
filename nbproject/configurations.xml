@@ -16,11 +16,11 @@
       <itemPath>config.s</itemPath>
       <itemPath>LCD.s</itemPath>
       <itemPath>Keypad.s</itemPath>
-      <itemPath>Clock_timer.s</itemPath>
       <itemPath>Operations.s</itemPath>
       <itemPath>Decimal_Display.s</itemPath>
       <itemPath>ADC.s</itemPath>
       <itemPath>Temperature.s</itemPath>
+      <itemPath>Clock.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

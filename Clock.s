@@ -3,8 +3,7 @@
 extrn	Write_Decimal_to_LCD  
 extrn	operation_check
 extrn	temporary_hrs, temporary_min, temporary_sec
-    
-extrn	ADC_Setup      
+      
 extrn	Temp
 extrn	Check_Alarm
 extrn	Write_colon, Write_Time, Write_Temp
@@ -26,20 +25,13 @@ timer_start_value_2:	ds 1
 check_60:	ds  1	;reserving byte to store decimal 60 in hex
 check_24:	ds  1	;reserving byte to store decimal 24 in hex
 
-psect	Clock_timer_code, class=CODE
+psect	Clock_code, class=CODE
 
 Clock_Setup: 
 	movlw	0x00		;setting start time to 00:00:00
 	movwf   clock_sec, A
 	movwf   clock_min, A
 	movwf   clock_hrs, A
-	
-	call	ADC_Setup
-	
-	movlw	0x00
-	movwf	alarm_sec, A
-	movwf	alarm_min, A
-	movwf	alarm_hrs, A
 	
 	call	Rewrite_Clock
 	
