@@ -6,37 +6,25 @@ extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Send_Byte_D
 extrn	LCD_Write_Hex, LCD_Write_Character, LCD_Write_Low_Nibble ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
 extrn	multiply24x8, multiply16x8 
+extrn	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_ll, out_24x8_ul, out_24x8_lu, out_24x8_uu, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
     
 global	Temp
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
-kh: ds 1	;k high byte, an input for 16x16
-kl: ds 1	;k low byte, an input for 16x16
-bigl: ds 1	;8x16, 16 bit number low byte input
-bigh: ds 1	;8x16, 16 bit number high byte input
-small: ds 1	;8x16, 8 bit number input
-ssoutll:ds 1	;16x16, low byte output
-ssoutl:	ds 1	;16x16, second lowest byte output
-ssouth:	ds 1	;16x16, second highest byte output
-ssouthh:ds 1	;16x16, high byte output
-ssoutil:ds 1	;16x16, intermediate used while multiplying
-ssoutih: ds 1	;16x16, intermediate used while multiplying
+in_K_h: ds 1	;k high byte, an input for 16x16
+in_K_l: ds 1	;k low byte, an input for 16x16
+in_AD_l:    ds 1
+in_AD_h:    ds 1
+    
+out_16x16_ll:	ds 1	;16x16, low byte output
+out_16x16_ul:	ds 1	;16x16, second lowest byte output
+out_16x16_lu:	ds 1	;16x16, second highest byte output
+out_16x16_uu:	ds 1	;16x16, high byte output
+intermediate1_16x16:	ds 1	;16x16, intermediate used while multiplying
+intermediate2_16x16:	ds 1	;16x16, intermediate used while multiplying
 
-seoutl:	ds 1	;16x8, low byte output
-seoutm:	ds 1	;16x8, middle byte output
-seouth:	ds 1	;16x8, high byte output
-seouti:	ds 1	;16x8, intermediate used while multiplying
-teoutll:ds 1	;24x8, low byte output
-teoutl:	ds 1	;24x8, second lowest byte output
-teouth:	ds 1	;24x8, second highest byte output
-teouthh:ds 1	;24x8, high byte output
-teouti:ds 1	;24x8, intermediate used while multiplying
-tinl:ds 1	;24x8, 24 bit number low byte input
-tinm:ds 1	;24x8, 24 bit number middle byte input
-tinh:ds 1	;24x8, 24 bit number high byte input
-ein:ds 1	;24x8, 8 bit number input
     
 psect	temp_code, class=CODE
 	;convert and display binary voltage as decimal on LCD;
@@ -64,9 +52,12 @@ Temp:
 	;convert hex to decimal;
 Conversion:
 	movlw	0x8A	;preparing inputs for multiplication
-	movwf	kl
+	movwf	in_K_l
 	movlw	0x41	;most sig byte of first number
-	movwf	kh
+	movwf	in_K_h
+	movff	ADRESH, in_AD_h
+	movff	ADRESL, in_AD_l
+	
 	call  multiply16x16_ADRES   ;first step of conversion
 	;movf	ssouthh, W
 	;call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
@@ -74,32 +65,32 @@ Conversion:
 	
 	
 	movlw	0x0A	;preparing inputs for multiplication
-	movwf	ein
+	movwf	in_24x8_8
 	
-	movff	ssouth, tinh	;preparing inputs for multiplication
-	movff	ssoutl, tinm
-	movff	ssoutll, tinl
+	movff	out_16x16_lu, in_24x8_24h	;preparing inputs for multiplication
+	movff	out_16x16_ul, in_24x8_24m
+	movff	out_16x16_ll, in_24x8_24l
 	call	multiply24x8	;second multiplication for conversion
-	movf	teouthh, W
+	movf	out_24x8_uu, W
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	
 	
-	movff	teouth, tinh	;preparing inputs for multiplication
-	movff	teoutl, tinm
-	movff	teoutll, tinl
+	movff	out_24x8_lu, in_24x8_24h	;preparing inputs for multiplication
+	movff	out_24x8_ul, in_24x8_24m
+	movff	out_24x8_ll, in_24x8_24l
 	call	multiply24x8  ;third multiplication for conversion
-	movf	teouthh, W
+	movf	out_24x8_uu, W
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	movlw	0x2E
 	call	LCD_Write_Character ;writing decimal point
 	
-	movff	teouth, tinh	;preparing inputs for multiplication
-	movff	teoutl, tinm
-	movff	teoutll, tinl
+	movff	out_24x8_lu, in_24x8_24h	;preparing inputs for multiplication
+	movff	out_24x8_ul, in_24x8_24m
+	movff	out_24x8_ll, in_24x8_24l
 	call	multiply24x8  ;fourth multiplication for conversion
-	movf	teouthh, W
+	movf	out_24x8_uu, W
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	return
@@ -107,55 +98,33 @@ Conversion:
 multiply16x16_ADRES:
 	   ;multiplying least sig byte of first number with second number;
 	   
-	movff	ADRESL, bigl  ;least sig byte of second number
-	movff	ADRESH, bigh  ;most sig byte of second number  
+	movff	in_AD_l, in_16x8_16l  ;least sig byte of second number
+	movff	in_AD_h, in_16x8_16h  ;most sig byte of second number  
 	
-	movff	kl, small		;least sig byte of first number into W
+	movff	in_K_l, in_16x8_8		;least sig byte of first number into W
 	call	multiply16x8	;multiply 
-	movff	seoutl, ssoutll	;store product in file registers
-	movff	seoutm, ssoutl
-	movff	seouth, ssouth
+	movff	out_16x8_l, out_16x16_ll	;store product in file registers
+	movff	out_16x8_m, out_16x16_ul
+	movff	out_16x8_h, out_16x16_lu
 	
 	    ;multiplying most sig byte of first number with second number;
 	    
-	movff	kh, small		;most sig byte of first number
+	movff	in_K_h, in_16x8_8		;most sig byte of first number
 	call	multiply16x8	;multiply
-	movff	seoutl, ssoutil	;store product in file registers
-	movff	seoutm, ssoutih
-	movff	seouth, ssouthh
+	movff	out_16x8_l, intermediate1_16x16	;store product in file registers
+	movff	out_16x8_m, intermediate2_16x16
+	movff	out_16x8_h, out_16x16_uu
 	
 	    ;adding the two products to get final product;
 	    
-	movf	ssoutil, W	     
-	addwfc	ssoutl, 1, 0	;adding second most sig byte of first product with least sig byte of second prod
+	movf	intermediate1_16x16, W	     
+	addwfc	out_16x16_ul, 1, 0	;adding second most sig byte of first product with least sig byte of second prod
 
-	movf	ssoutih, W
-	addwfc	ssouth, 1, 0  ;adding most sig byte of first product with second least sig byte of second prod, with carry
+	movf	intermediate2_16x16, W
+	addwfc	out_16x16_lu, 1, 0  ;adding most sig byte of first product with second least sig byte of second prod, with carry
 	
 	movlw	0x00
-	addwfc	ssouthh, 1, 0  ;add carry to most sig byte of second prod
-	return
-	
-multiply16x8:	
-    
-	    ;multiplying 8bit number with least sig byte of 16bit number
-	movf	small, W
-	mulwf	bigl	    ;multiply W with 0x21
-	movff	PRODL, seoutl ;store product in file registers
-	movff	PRODH, seoutm
-	
-	    ;multiplying 8 bit number with most sig byte of 16 bit number
-	movf	small, W
-	mulwf	bigh	;multiply W with 0x22
-	movff	PRODL, seouti
-	movff	PRODH, seouth
-	
-	    ;adding products together to get final product;
-	movf	seouti, W
-	addwf	seoutm, 1, 0  ; add most sig of first product with least sig of second product and store in 0x21
-	
-	movlw	0x00
-	addwfc	seouth, 1, 0  ;add carry bit to most sig bit of second product and store in 0x23
+	addwfc	out_16x16_uu, 1, 0  ;add carry to most sig byte of second prod
 	return
 
 	; a delay subroutine if you need one, times around loop in delay_count

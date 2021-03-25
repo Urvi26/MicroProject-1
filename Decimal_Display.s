@@ -2,6 +2,7 @@
 
 extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Write_High_Nibble ; external LCD subroutines
 global	Write_Decimal_to_LCD, multiply16x8, multiply24x8
+global	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_ll, out_24x8_ul, out_24x8_lu, out_24x8_uu, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
     
 psect	udata_acs   ; reserve data space in access ram
 in_16x8_16l:	ds 1	;8x16, 16 bit number low byte input
