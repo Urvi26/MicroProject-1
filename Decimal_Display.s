@@ -2,7 +2,7 @@
 
 extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Write_High_Nibble ; external LCD subroutines
 global	Write_Decimal_to_LCD, Multiply16x8, Multiply24x8
-global	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_ll, out_24x8_ul, out_24x8_lu, out_24x8_uu, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
+global	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_l, out_24x8_ul, out_24x8_lu, out_24x8_u, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
     
 psect	udata_acs   ; reserve data space in access ram
 in_16x8_16l:	ds 1	;8x16, 16 bit number low byte input
@@ -14,10 +14,10 @@ out_16x8_m:	ds 1	;16x8, middle byte output
 out_16x8_h:	ds 1	;16x8, high byte output
 intermediate_16x8:	ds 1	;16x8, intermediate used while multiplying
 
-out_24x8_ll:ds 1	;24x8, low byte output
+out_24x8_l:ds 1	;24x8, low byte output
 out_24x8_ul:	ds 1	;24x8, second lowest byte output
 out_24x8_lu:	ds 1	;24x8, second highest byte output
-out_24x8_uu:ds 1	;24x8, high byte output
+out_24x8_u:ds 1	;24x8, high byte output
 intermediate_24x8:	ds 1	;24x8, intermediate used while multiplying
 
 in_24x8_24l:	ds 1	;24x8, 24 bit number low byte input
@@ -59,7 +59,7 @@ Write_Decimal_to_LCD:
 	andwf   out_24x8_lu, 0, 1	    ;preparing inputs for multiplication
 	movwf	in_24x8_24h, A		
 	movff	out_24x8_ul, in_24x8_24m
-	movff	out_24x8_ll, in_24x8_24l
+	movff	out_24x8_l, in_24x8_24l
 	
 	call	Multiply24x8  ;third multiplication for conversion
 	
@@ -71,7 +71,7 @@ Multiply24x8:
     
 	movf    in_24x8_24l, W, A
 	mulwf   in_24x8_8, A
-	movff   PRODL, out_24x8_ll
+	movff   PRODL, out_24x8_l
 	movff   PRODH, out_24x8_ul
 
 	movff   in_24x8_8, in_16x8_8
@@ -80,7 +80,7 @@ Multiply24x8:
 	call    Multiply16x8
 	movff   out_16x8_l, intermediate_24x8
 	movff   out_16x8_m, out_24x8_lu
-	movff   out_16x8_h, out_24x8_uu
+	movff   out_16x8_h, out_24x8_u
 
 	movf    intermediate_24x8, W, A
 	addwf   out_24x8_ul, 1, 0
@@ -89,7 +89,7 @@ Multiply24x8:
 	addwfc  out_24x8_lu, 1,0
 
 	movlw   0x00
-	addwfc  out_24x8_uu,   1,0
+	addwfc  out_24x8_u,   1,0
 	return
 
 Multiply16x8:	

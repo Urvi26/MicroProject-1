@@ -6,7 +6,7 @@ extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Send_Byte_D
 extrn	LCD_Write_Hex, LCD_Write_Character, LCD_Write_Low_Nibble ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
 extrn	Multiply24x8, Multiply16x8 
-extrn	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_ll, out_24x8_ul, out_24x8_lu, out_24x8_uu, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
+extrn	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_l, out_24x8_ul, out_24x8_lu, out_24x8_u, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
     
 global	Temp
 	
@@ -17,10 +17,10 @@ in_K_l: ds 1	;k low byte, an input for 16x16
 in_AD_l:    ds 1
 in_AD_h:    ds 1
     
-out_16x16_ll:	ds 1	;16x16, low byte output
+out_16x16_l:	ds 1	;16x16, low byte output
 out_16x16_ul:	ds 1	;16x16, second lowest byte output
 out_16x16_lu:	ds 1	;16x16, second highest byte output
-out_16x16_uu:	ds 1	;16x16, high byte output
+out_16x16_u:	ds 1	;16x16, high byte output
 intermediate1_16x16:	ds 1	;16x16, intermediate used while multiplying
 intermediate2_16x16:	ds 1	;16x16, intermediate used while multiplying
 
@@ -67,18 +67,18 @@ Conversion:
 	
 	movff	out_16x16_lu, in_24x8_24h	;preparing inputs for multiplication
 	movff	out_16x16_ul, in_24x8_24m
-	movff	out_16x16_ll, in_24x8_24l
+	movff	out_16x16_l, in_24x8_24l
 	call	Multiply24x8	;second multiplication for conversion
-	movf	out_24x8_uu, W, A
+	movf	out_24x8_u, W, A
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	
 	
 	movff	out_24x8_lu, in_24x8_24h	;preparing inputs for multiplication
 	movff	out_24x8_ul, in_24x8_24m
-	movff	out_24x8_ll, in_24x8_24l
+	movff	out_24x8_l, in_24x8_24l
 	call	Multiply24x8  ;third multiplication for conversion
-	movf	out_24x8_uu, W, A
+	movf	out_24x8_u, W, A
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	movlw	0x2E
@@ -86,9 +86,9 @@ Conversion:
 	
 	movff	out_24x8_lu, in_24x8_24h	;preparing inputs for multiplication
 	movff	out_24x8_ul, in_24x8_24m
-	movff	out_24x8_ll, in_24x8_24l
+	movff	out_24x8_l, in_24x8_24l
 	call	Multiply24x8  ;fourth multiplication for conversion
-	movf	out_24x8_uu, W, A
+	movf	out_24x8_u, W, A
 	call	LCD_Write_Low_Nibble	;display low nibble of most sig byte of answer
 	
 	return
@@ -101,7 +101,7 @@ Multiply16x16_ADRES:
 	
 	movff	in_K_l, in_16x8_8		;least sig byte of first number into W
 	call	Multiply16x8	;multiply 
-	movff	out_16x8_l, out_16x16_ll	;store product in file registers
+	movff	out_16x8_l, out_16x16_l	;store product in file registers
 	movff	out_16x8_m, out_16x16_ul
 	movff	out_16x8_h, out_16x16_lu
 	
@@ -111,7 +111,7 @@ Multiply16x16_ADRES:
 	call	Multiply16x8	;multiply
 	movff	out_16x8_l, intermediate1_16x16	;store product in file registers
 	movff	out_16x8_m, intermediate2_16x16
-	movff	out_16x8_h, out_16x16_uu
+	movff	out_16x8_h, out_16x16_u
 	
 	    ;adding the two products to get final product;
 	    
@@ -122,5 +122,5 @@ Multiply16x16_ADRES:
 	addwfc	out_16x16_lu, 1, 0  ;adding most sig byte of first product with second least sig byte of second prod, with carry
 	
 	movlw	0x00
-	addwfc	out_16x16_uu, 1, 0  ;add carry to most sig byte of second prod
+	addwfc	out_16x16_u, 1, 0  ;add carry to most sig byte of second prod
 	return
