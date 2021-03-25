@@ -6,16 +6,19 @@ extrn	LCD_Write_Low_Nibble, LCD_delay_x4us, LCD_delay_ms
     
 extrn	Keypad, keypad_val
 
-extrn	rewrite_clock
+extrn	Rewrite_Clock
 extrn	clock_sec, clock_min, clock_hrs  
 extrn	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null
+    
+extrn	alarm_hrs, alarm_min, alarm_sec
+extrn	Display_Alarm_Time, alarm_on    
 extrn	Write_Error, Write_no_alarm, Write_zeros, Write_Time, Write_Temp, Write_Alarm, Write_New
 extrn	Write_colon, Write_space, LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
-    
-extrn	alarm_hrs, alarm_min, alarm_sec, Display_Alarm_Time, alarm, alarm_on    
-    
 global	temporary_hrs, temporary_min, temporary_sec
-global	Clock, Clock_Setup, operation
+global	Clock, Clock_Setup, operation, Operation_Setup
+    
+
+    
     
 psect	udata_acs
 check_60:	ds  1	;reserving byte to store decimal 60 in hex
@@ -38,10 +41,14 @@ timer_start_value_2: ds 1
 skip_byte:	ds 1
 
     
-	
+alarm: ds 1      
     
 psect	Operations_code, class=CODE
 
+Operation_Setup:
+	bcf	alarm, 0, A
+	
+	return
 
 operation:
 	bsf	operation_check, 0, A
@@ -54,12 +61,12 @@ check_keypad:
 	bra	check_keypad ;might get stuck
 check_alarm:	
 	CPFSEQ	hex_A, A
-	bra check_set_time
-	bra set_alarm
+	bra	check_set_time
+	bra	set_alarm
 check_set_time:
 	CPFSEQ	hex_B, A
-	bra check_cancel
-	bra set_time
+	bra	check_cancel
+	bra	Set_Time
 check_cancel:
 	CPFSEQ	hex_C, A
 	bra	check_keypad
@@ -81,14 +88,14 @@ set_alarm:
 	
 	bsf	alarm, 0, A
 	
-	bra set_time_clear	
+	bra	Set_Time_Clear	
 	
-set_time: 
+Set_Time: 
 	call	LCD_cursor_on
     
 	call	LCD_Line1
 	
-	call	Display_Set_Time
+	call	Display_Time_Setup
 	
 	call	LCD_Line1
 	
@@ -96,7 +103,7 @@ set_time:
 	
 	bcf	alarm, 0, A
 	
-set_time_clear:	
+Set_Time_Clear:	
 	clrf	set_time_hrs1, A
 	clrf	set_time_hrs2, A
 	clrf	set_time_min1, A
@@ -110,131 +117,131 @@ set_time_clear:
 	
 	bcf	skip_byte,  0, A	    ;set skip byte to zero to be used to skip lines later
 	
-set_time1:	
-	call input_check	
+Set_Time1:	
+	call Input_Check	
 	
 	CPFSEQ	hex_C, A
 	btfsc	skip_byte, 0, A
-	bra	cancel
+	bra	Cancel
 	CPFSEQ	hex_D, A
 	btfsc	skip_byte, 0, A
-	bra	delete
+	bra	Delete
 	CPFSEQ	hex_E, A
 	btfsc	skip_byte, 0, A
-	bra	enter_time
+	bra	Enter_Time
 	
 	movff	keypad_val, set_time_hrs1
 	
 	call	Write_keypad_val
-	call delay
-set_time2:
-	call input_check	  
+	call	delay
+Set_Time2:
+	call	Input_Check	  
 
 	CPFSEQ	hex_C, A
 	btfsc	skip_byte, 0, A
-	bra	cancel
+	bra	Cancel
 	CPFSEQ	hex_D, A
 	btfsc	skip_byte, 0, A
-	bra	delete
+	bra	Delete
 	CPFSEQ	hex_E, A
 	btfsc	skip_byte, 0, A
-	bra	enter_time
+	bra	Enter_Time
 	
 	movff	keypad_val, set_time_hrs2
 	
-	call Write_keypad_val
+	call	Write_keypad_val
 	call	Write_colon	    ;write ':' to LCD
-	call delay
-set_time3:
-	call input_check	  
+	call	delay
+Set_Time3:
+	call	Input_Check	  
 	
 	CPFSEQ	hex_C, A
 	btfsc	skip_byte, 0, A
-	bra	cancel
+	bra	Cancel
 	CPFSEQ	hex_D, A
 	btfsc	skip_byte, 0, A
-	bra	delete
+	bra	Delete
 	CPFSEQ	hex_E, A
 	btfsc	skip_byte, 0, A
-	bra	enter_time
+	bra	Enter_Time
 	
 	movff	keypad_val, set_time_min1
 	
-	call Write_keypad_val
-	call delay
-set_time4:
-	call input_check	  
+	call	Write_keypad_val
+	call	delay
+Set_Time4:
+	call	Input_Check	  
 	
 	CPFSEQ	hex_C, A
 	btfsc	skip_byte, 0, A
-	bra	cancel
+	bra	Cancel
 	CPFSEQ	hex_D, A
 	btfsc	skip_byte, 0, A
-	bra	delete
+	bra	Delete
 	CPFSEQ	hex_E, A
 	btfsc	skip_byte, 0, A
-	bra	enter_time
+	bra	Enter_Time
 	
 	movff	keypad_val, set_time_min2
 	
 	call	Write_keypad_val
 	call	Write_colon	    ;write ':' to LCD
-	call delay
-set_time5:
-	call input_check	  
+	call	delay
+Set_Time5:
+	call	Input_Check	  
 	
 	CPFSEQ	hex_C, A
 	btfsc	skip_byte, 0, A
-	bra	cancel
+	bra	Cancel
 	CPFSEQ	hex_D, A
 	btfsc	skip_byte, 0, A
-	bra	delete
+	bra	Delete
 	CPFSEQ	hex_E, A
 	btfsc	skip_byte, 0, A
-	bra	enter_time
+	bra	Enter_Time
 	
 	movff	keypad_val, set_time_sec1
 	
-	call Write_keypad_val
-	call delay
-set_time6:
-	call input_check	  
+	call	Write_keypad_val
+	call	delay
+Set_Time6:
+	call	Input_Check	  
 	
 	CPFSEQ	hex_C, A
 	btfsc	skip_byte, 0, A
-	bra	cancel
+	bra	Cancel
 	CPFSEQ	hex_D, A
 	btfsc	skip_byte, 0, A
-	bra	delete
+	bra	Delete
 	CPFSEQ	hex_E, A
 	btfsc	skip_byte, 0, A
-	bra	enter_time
+	bra	Enter_Time
 	
 	movff	keypad_val, set_time_sec2
 	
-	call Write_keypad_val
-	call delay
+	call	Write_keypad_val
+	call	delay
 
-check_enter:
-	call input_check
+Check_Enter:
+	call	Input_Check
 	
 	CPFSEQ	hex_C, A
 	btfsc	skip_byte, 0, A
-	bra	cancel
+	bra	Cancel
 	CPFSEQ	hex_D, A
 	btfsc	skip_byte, 0, A
-	bra	delete
+	bra	Delete
 	CPFSEQ	hex_E, A
 	btfsc	skip_byte, 0, A
-	bra	enter_time
-	bra	check_enter
+	bra	Enter_Time
+	bra	Check_Enter
 	
-enter_time:
-	call input_sort
+Enter_Time:
+	call	Input_Sort
 	
 	;call LCD_Clear
 	
-	call LCD_cursor_off
+	call	LCD_cursor_off
 	
 	bcf	operation_check, 0, A
 	bcf	alarm, 0, A
@@ -243,48 +250,44 @@ enter_time:
 	
 	return
 	
-cancel:
+Cancel:
 	
 	call	LCD_cursor_off
 	
 	bcf	operation_check, 0, A
 	bcf	alarm, 0, A
 	
-	call LCD_Clear
+	call	LCD_Clear
 	
 	return
 	
-delete:
+Delete:
 	btfss	alarm, 0, A
-	bra	cancel
+	bra	Cancel
 	bcf	alarm_on, 0, A
-	bra	cancel
+	bra	Cancel
   
-input_check:
-	call Keypad
+Input_Check:
+	call	Keypad
 	movf	keypad_val, W, A
 	CPFSEQ	hex_null, A
-	bra keypad_input_A
-	bra input_check
-keypad_input_A:
+	bra	Keypad_Input_A
+	bra	Input_Check
+Keypad_Input_A:
 	CPFSEQ	hex_A, A
-	bra keypad_input_B
-	bra input_check
-keypad_input_B:
+	bra	Keypad_Input_B
+	bra	Input_Check
+Keypad_Input_B:
 	CPFSEQ	hex_B, A
-	bra keypad_input_F;bra keypad_input_D
-	bra input_check
-;keypad_input_D:
-;	CPFSEQ	hex_D
-;	bra keypad_input_F
-;	bra input_check
-keypad_input_F:
+	bra	Keypad_Input_F;bra keypad_input_D
+	bra	Input_Check
+Keypad_Input_F:
 	CPFSEQ	hex_F, A
 	return
-	bra input_check
+	bra	Input_Check
 	
 	
-Display_Set_Time:
+Display_Time_Setup:
     	call	LCD_Line1
 	call	Write_Time	    ;write 'Time: ' to LCD
 	call	Write_zeros
@@ -325,7 +328,7 @@ Write_keypad_val:
 	call	LCD_Write_Low_Nibble
 	return
     
-input_sort:
+Input_Sort:
 	movlw	0x3C		;setting hex values for decimal 24 and 60 for comparison
 	movwf	check_60, A
 	movlw	0x18
@@ -336,7 +339,7 @@ input_sort:
 	movf	PRODL, W, A
 	addwf	set_time_hrs2, 0, 0
 	CPFSGT	check_24, A
-	bra	output_error
+	bra	Output_Error
 	movwf	temporary_hrs, A
 	
 	movf	set_time_min1, W, A
@@ -344,7 +347,7 @@ input_sort:
 	movf	PRODL, W, A
 	addwf	set_time_min2, 0, 0
 	CPFSGT	check_60, A
-	bra	output_error
+	bra	Output_Error
 	movwf	temporary_min, A
 	
 	movf	set_time_sec1, W, A
@@ -352,44 +355,39 @@ input_sort:
 	movf	PRODL, W, A
 	addwf	set_time_sec2, 0, 0
 	CPFSGT	check_60, A
-	bra	output_error
+	bra	Output_Error
 	movwf	temporary_sec, A
 	
 	btfss	alarm, 0, A
-	bra	input_into_clock
-	bra	input_into_alarm
+	bra	Input_into_Clock
+	bra	Input_into_Alarm
 	
-input_into_clock:
+Input_into_Clock:
 	movff	temporary_hrs, clock_hrs
 	movff	temporary_min, clock_min
 	movff	temporary_sec, clock_sec
-	;call	rewrite_clock		
+	;call	Rewrite_Clock		
 	return
 
-input_into_alarm:
+Input_into_Alarm:
 	movff	temporary_hrs, alarm_hrs
 	movff	temporary_min, alarm_min
 	movff	temporary_sec, alarm_sec
 	
 	bsf	alarm_on, 0, A
-	;call	rewrite_clock
+	;call	Rewrite_Clock
 	return
 	
 	
 	
-output_error:
+Output_Error:
 	
 	call    LCD_cursor_off ;turn off cursor and blinking
 
 	call	LCD_Clear
 	call	LCD_Line1	    ;set position in LCD to first line, first character
 	call	Write_Error  
-	movlw	0x64
-	call	delay
-	call	delay
-	call	delay
-	bra	    cancel
-    
+	bra	Cancel
     
 delay:	
 	movlw	0x64
@@ -402,9 +400,6 @@ delay:
 	call	LCD_delay_ms
 	return
 	
-	
-
-    
-    end
+    end; ?? are we supposed to have this or not?
 
 

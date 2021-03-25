@@ -298,7 +298,7 @@ Write_Error:
 	call	LCD_Write_Character	;write 'o'
 	movlw	'r'
 	call	LCD_Write_Character	;write 'r'  
-	
+	call delay
 	return
 	
 Write_Time:

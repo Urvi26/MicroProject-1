@@ -13,7 +13,7 @@ extrn	Write_Snooze, Write_space, Write_colon, Write_ALARM, Write_Time, Write_Tem
 extrn	LCD_Line2, LCD_Line1
     
 global	clock_sec, clock_min, clock_hrs
-global	Clock, Clock_Setup, rewrite_clock
+global	Clock, Clock_Setup, Rewrite_Clock
 global	hex_A, hex_B, hex_C, hex_D, hex_E, hex_F, hex_null  
 global	alarm_hrs, alarm_min, alarm_sec, Display_Alarm_Time, alarm, alarm_on
     
@@ -47,7 +47,7 @@ hex_E:	ds 1
 hex_F:	ds 1
 hex_null:   	ds  1
 
-Alarm_buzz: ds 1    
+alarm_buzz: ds 1    
     
 skip_byte: ds 1
 
@@ -73,11 +73,11 @@ Clock_Setup:
 	bcf	alarm_on, 0, A
 	bcf	buzz_bit, 0, A
 	
-	clrf	Alarm_buzz, A
+	clrf	alarm_buzz, A
 	
 	bsf	skip_byte, 0, A
 	
-	call	rewrite_clock
+	call	Rewrite_Clock
 	
 	movlw	0x3C		;setting hex values for decimal 24 and 60 for comparison
 	movwf	check_60, A
@@ -114,27 +114,27 @@ Clock_Setup:
 Clock:	
 	btfss	TMR0IF		; check that this is timer0 interrupt
 	retfie	f		; if not then return
-	call	clock_inc	; increment clock time
+	call	Clock_Inc	; increment clock time
 	movff	timer_start_value_1, TMR0H	;setting upper byte timer start value
 	movff	timer_start_value_2, TMR0L		;setting lower byte timer start value
 	bcf	TMR0IF		; clear interrupt flag
 	btfss	operation_check, 0, A ;skip rewrite clock if = 1
-	call	rewrite_clock	;write and display clock time as decimal on LCD 
-	call	check_alarm
+	call	Rewrite_Clock	;write and display clock time as decimal on LCD 
+	call	Check_Alarm
 	retfie	f		; fast return from interrupt	
 	
-check_alarm:
+Check_Alarm:
 	movlw	0x00
-	cpfseq	Alarm_buzz, A
-	bra	decrement_alarm_buzz
-	bra	compare_alarm
+	cpfseq	alarm_buzz, A
+	bra	Decrement_Alarm_Buzz
+	bra	Compare_Alarm
 
-decrement_alarm_buzz:
-	decf	Alarm_buzz, A
+Decrement_Alarm_Buzz:
+	decf	alarm_buzz, A
 	call	ALARM
 	return
 	
-compare_alarm:  
+Compare_Alarm:  
 	btfss	alarm_on, 0, A
 	return
 	movf	alarm_hrs, W, A
@@ -148,7 +148,7 @@ compare_alarm:
 	return
 	
 	movlw	0x3C
-	movwf	Alarm_buzz, A
+	movwf	alarm_buzz, A
 	
 	call ALARM
 	return
@@ -156,24 +156,12 @@ ALARM:
 	call	LCD_Line2
 	call	Write_ALARM
 
-	call	check_buzz_bit
-	call	buzzer
+	BTG	buzz_bit,0
+	call	Buzzer
 
 	return	
-		
-check_buzz_bit:
-	btfsc	buzz_bit, 0, A
-	bra	clear_buzz_bit
-	bra	set_buzz_bit
-clear_buzz_bit:	
-	bcf	buzz_bit, 0, A
-	return
-set_buzz_bit:
-	bsf	buzz_bit, 0, A
-	return
-	
-	
-rewrite_clock:
+			
+Rewrite_Clock:
 	call	LCD_Line1
 	call	Write_Time	    ;write 'Time: ' to LCD
 	movf	clock_hrs, W, A	    ;write hours time to LCD as decimal
@@ -190,7 +178,7 @@ rewrite_clock:
 	return
 	
 
-clock_inc:	
+Clock_Inc:	
 	incf	clock_sec, A	    ;increase seconds time by one
 	movf	clock_sec, W, A	   
 	cpfseq	check_60, A	    ;check clock seconds is equal than 60
@@ -220,7 +208,7 @@ Display_Alarm_Time:
 	call Write_Decimal_to_LCD
 	return
 	  
-buzzer:	
+Buzzer:	
 	;Initialize
 	bcf	TRISB, 6, A
 	
@@ -229,49 +217,49 @@ buzzer:
 	movlw	0x1E
 	movwf	buzzer_counter_2, A
 
-buzz_loop_1:
+Buzz_Loop_1:
     
-check_cancel_snooze:
+Check_Cancel_Snooze:
 	call	Keypad
 	movf	keypad_val, W, A
 	CPFSEQ	hex_C, A
 	btfss	skip_byte, 0, A
-	bra	cancel_alarm
+	bra	Cancel_Alarm
 	CPFSEQ	hex_A, A
 	btfss	skip_byte, 0, A
-	bra	snooze_alarm	    
+	bra	Snooze_Alarm	    
    
 
-	call	buzz_loop_2
+	call	Buzz_Loop_2
 	movlw	0x1E
 	movwf	buzzer_counter_2, A
 	
 	decfsz	buzzer_counter_1, A
-	bra	buzz_loop_1
+	bra	Buzz_Loop_1
 	return
     
-buzz_loop_2:
-	call	buzz_sequence
+Buzz_Loop_2:
+	call	Buzz_Sequence
     
 	decfsz	buzzer_counter_2, A
-	bra	buzz_loop_2	
+	bra	Buzz_Loop_2	
 	return
 	
 	
 	
-buzz_sequence:	
+Buzz_Sequence:	
     
-check_if_buzz:
+Check_if_Buzz:
 	btfss	buzz_bit, 0, A
-	bra	no_buzz
-	bra	yes_buzz
+	bra	No_Buzz
+	bra	Yes_Buzz
 	
-no_buzz:
+No_Buzz:
 	call	delay_buzzer
 	call	delay_buzzer
 	return
 	
-yes_buzz:	
+Yes_Buzz:	
 	bsf	LATB, 6, A	;Ouput high
 	call	delay_buzzer
 	bcf	LATB, 6, A	;Ouput low
@@ -280,12 +268,12 @@ yes_buzz:
 	
 	
 	
-cancel_alarm:
-	clrf	Alarm_buzz, A
+Cancel_Alarm:
+	clrf	alarm_buzz, A
 	return
 	
-snooze_alarm:
-	clrf	Alarm_buzz, A
+Snooze_Alarm:
+	clrf	alarm_buzz, A
 	call	Write_Snooze
 	
 	movlw	0x05
