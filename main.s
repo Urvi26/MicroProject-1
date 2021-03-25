@@ -1,24 +1,39 @@
-	#include <xc.inc>
+#include <xc.inc>
 
+extrn	Clock_Setup, Clock
+extrn	operation, Operation_Setup
+extrn	LCD_Setup, LCD_Clear
+extrn	Keypad, keypad_val, keypad_ascii
+  
+global	operation_check
+    
+psect	udata_acs
+operation_check:	ds  1	;reserving byte   
+    
 psect	code, abs
 	
-main:
-	org	0x0
+main:	org	0x0	; reset vector
 	goto	start
+	;org	0x100
 
-	org	0x100		    ; Main code starts here at address 0x100
+int_hi:	org	0x0008	; high vector, no low vector
+	goto	Clock
+	
 start:
-	movlw 	0x0
-	movwf	TRISB, A	    ; Port C all outputs
-	bra 	test
-loop:
-	movff 	0x06, PORTB
-	incf 	0x06, W, A
-test:
-	movwf	0x06, A	    ; Test for end of loop condition
-	movlw 	0x63
-	cpfsgt 	0x06, A
-	bra 	loop		    ; Not yet finished goto start of loop again
-	goto 	0x0		    ; Re-run program from start
+	call	LCD_Setup
+	call	Clock_Setup
+	call	Operation_Setup
+	clrf	operation_check, A
+	
+settings_clock:
+	call	Keypad
+	movlw	0x0f
+	CPFSEQ	keypad_val, A
+	bra	settings_clock
+	
+	call	operation
 
+	
+	goto	settings_clock	; Sit in infinite loop
+    
 	end	main
