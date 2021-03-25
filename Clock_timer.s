@@ -61,7 +61,7 @@ Clock_Setup:
 	bsf skip_byte, 0
 	call	ADC_Setup
 	
-	movlw	0x01	;;;;;
+	movlw	0x00	;;;;;
 	movwf	alarm_sec
 	movwf	alarm_min
 	movwf	alarm_hrs

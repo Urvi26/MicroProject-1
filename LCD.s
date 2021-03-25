@@ -101,6 +101,16 @@ LCD_cursor_on:
 	call    LCD_Send_Byte_I	;set cursor on
 	return
 	
+LCD_Line1:
+    movlw   10000000B
+    call    LCD_Set_Position	;set cursor on
+    return
+    
+LCD_Line2:
+    movlw   11000000B
+    call    LCD_Set_Position	;set cursor on
+    return
+    
 LCD_Write_Character:	;send ascii code to LCD to display character
 	call	LCD_Send_Byte_D
 	movlw	10	    ; delay 40us
