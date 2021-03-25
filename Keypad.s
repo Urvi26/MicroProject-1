@@ -172,9 +172,7 @@ CheckC:	movlw	01110111B
 	movwf	keypad_val, A
 	return
 	
-Null:	movlw	0x00
-	movwf	keypad_ascii, A
-	movlw	0xff
+Null:	movlw	0xff
 	movwf	keypad_val, A
 	return
 	

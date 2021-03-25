@@ -2,13 +2,11 @@
 	
 extrn	Write_Decimal_to_LCD  
 extrn	operation_check
-extrn	temporary_hrs, temporary_min, temporary_sec
       
 extrn	Temp
 extrn	Check_Alarm
 extrn	Write_colon, Write_Time, Write_Temp
-extrn	LCD_Line2, LCD_Line1
-extrn	alarm_hrs, alarm_min, alarm_sec
+extrn	LCD_Set_to_Line_2, LCD_Set_to_Line_1
     
 global	clock_sec, clock_min, clock_hrs
 global	Clock, Clock_Setup, Rewrite_Clock
@@ -65,17 +63,21 @@ Clock:
 	retfie	f		; fast return from interrupt	
 
 Rewrite_Clock:
-	call	LCD_Line1
+	call	LCD_Set_to_Line_1
 	call	Write_Time	    ;write 'Time: ' to LCD
+	
 	movf	clock_hrs, W, A	    ;write hours time to LCD as decimal
 	call	Write_Decimal_to_LCD  
 	call	Write_colon	    ;write ':' to LCD
+	
 	movf	clock_min, W, A	    ;write minutes time to LCD as decimal
 	call	Write_Decimal_to_LCD
 	call	Write_colon	    ;write ':' to LCD
+	
 	movf	clock_sec, W, A	    ;write seconds time to LCD as decimal
 	call	Write_Decimal_to_LCD
-	call	LCD_Line2
+	call	LCD_Set_to_Line_2
+	
 	call	Write_Temp	    ;write 'Temp: ' to LCD
 	call	Temp		    ;Here will write temperature to LCD
 	return

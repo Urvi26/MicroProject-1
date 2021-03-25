@@ -2,7 +2,8 @@
 
 extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Write_High_Nibble ; external LCD subroutines
 global	Write_Decimal_to_LCD, Multiply16x8, Multiply24x8
-global	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_l, out_24x8_ul, out_24x8_lu, out_24x8_u, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
+global	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l
+global	out_24x8_l, out_24x8_ul, out_24x8_lu, out_24x8_u, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
     
 psect	udata_acs   ; reserve data space in access ram
 in_16x8_16l:	ds 1	;8x16, 16 bit number low byte input
@@ -14,16 +15,16 @@ out_16x8_m:	ds 1	;16x8, middle byte output
 out_16x8_h:	ds 1	;16x8, high byte output
 intermediate_16x8:	ds 1	;16x8, intermediate used while multiplying
 
+in_24x8_24l:	ds 1	;24x8, 24 bit number low byte input
+in_24x8_24m:	ds 1	;24x8, 24 bit number middle byte input
+in_24x8_24h:	ds 1	;24x8, 24 bit number high byte input
+in_24x8_8:	ds 1	;24x8, 8 bit number input
+
 out_24x8_l:ds 1	;24x8, low byte output
 out_24x8_ul:	ds 1	;24x8, second lowest byte output
 out_24x8_lu:	ds 1	;24x8, second highest byte output
 out_24x8_u:ds 1	;24x8, high byte output
 intermediate_24x8:	ds 1	;24x8, intermediate used while multiplying
-
-in_24x8_24l:	ds 1	;24x8, 24 bit number low byte input
-in_24x8_24m:	ds 1	;24x8, 24 bit number middle byte input
-in_24x8_24h:	ds 1	;24x8, 24 bit number high byte input
-in_24x8_8:	ds 1	;24x8, 8 bit number input
 
 psect	Hextodec_code,class=CODE
 

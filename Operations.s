@@ -12,7 +12,7 @@ extrn	clock_sec, clock_min, clock_hrs
 extrn	alarm_hrs, alarm_min, alarm_sec
 extrn	alarm_on    
 extrn	Write_Error, Write_no_alarm, Write_zeros, Write_Time, Write_Temp, Write_Alarm, Write_New
-extrn	Write_colon, Write_space, LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
+extrn	Write_colon, Write_space, LCD_cursor_on, LCD_cursor_off, LCD_Set_to_Line_1, LCD_Set_to_Line_2
 
 global	temporary_hrs, temporary_min, temporary_sec
 global	Clock, Clock_Setup, operation, Operation_Setup, skip_byte, check_60, check_24
@@ -39,7 +39,6 @@ timer_start_value_2: ds 1
     
 skip_byte:	ds 1
 
-    
 hex_A:	ds 1
 hex_B:	ds 1
 hex_C:	ds 1
@@ -55,6 +54,7 @@ psect	Operations_code, class=CODE
 Operation_Setup:
 	bcf	alarm, 0, A
 	bcf	skip_byte,  0, A	    ;set skip byte to zero to be used to skip lines later
+	
 	movlw	0x0A		;storing keypad character hex values
 	movwf	hex_A, A
 	movlw	0x0B
@@ -97,11 +97,11 @@ set_alarm:
 	;call LCD_Clear
 	call	LCD_cursor_on
 	
-	call	LCD_Line2
+	call	LCD_Set_to_Line_2
 	
 	call	Display_Set_Alarm
 	
-	call	LCD_Line2
+	call	LCD_Set_to_Line_2
 	
 	call	Write_New
 	
@@ -114,11 +114,11 @@ set_alarm:
 Set_Time: 
 	call	LCD_cursor_on
     
-	call	LCD_Line1
+	call	LCD_Set_to_Line_1
 	
 	call	Display_Time_Setup
 	
-	call	LCD_Line1
+	call	LCD_Set_to_Line_1
 	
 	call	Write_Time	    ;write 'Time: ' to LCD
 	
@@ -299,7 +299,7 @@ Keypad_Input_A:
 	bra	Input_Check
 Keypad_Input_B:
 	CPFSEQ	hex_B, A
-	bra	Keypad_Input_F;bra keypad_input_D
+	bra	Keypad_Input_F
 	bra	Input_Check
 Keypad_Input_F:
 	CPFSEQ	hex_F, A
@@ -308,10 +308,11 @@ Keypad_Input_F:
 	
 	
 Display_Time_Setup:
-    	call	LCD_Line1
+    	call	LCD_Set_to_Line_1
 	call	Write_Time	    ;write 'Time: ' to LCD
 	call	Write_zeros
-	call	LCD_Line2
+	
+	call	LCD_Set_to_Line_2
 	call	Write_Temp	    ;write 'Temp: ' to LCD
 				    ;Here will write temperature to LCD
 	return
@@ -319,9 +320,10 @@ Display_Time_Setup:
 Display_Set_Alarm:
 	;call	LCD_Clear
     
-    	call	LCD_Line1
+    	call	LCD_Set_to_Line_1
 	
 	call	Write_Alarm	    ;write 'Alarm: ' to LCD
+	call	Write_space
 	
 	;call	Write_zeros
 	btfss	alarm_on,0, A
@@ -329,24 +331,22 @@ Display_Set_Alarm:
 	btfss	skip_byte,0, A
 	call	Display_Alarm_Time
 	
-	call	LCD_Line2
+	call	LCD_Set_to_Line_2
 	
 	call	Write_New
-	
-	;call	Write_Alarm	    ;write 'Time: ' to LCD
 	call	Write_zeros
-	;call	LCD_Line2
-	;call	Write_Temp	    ;write 'Temp: ' to LCD
-				    ;Here will write temperature to LCD
+	
 	return
 
 Display_Alarm_Time:
 	movf	alarm_hrs, W, A
 	call Write_Decimal_to_LCD
 	call	Write_colon
+	
 	movf	alarm_min, W, A
 	call Write_Decimal_to_LCD
 	call	Write_colon
+	
 	movf	alarm_sec, W, A
 	call Write_Decimal_to_LCD
 	return
@@ -409,7 +409,7 @@ Input_into_Alarm:
 Output_Error:
 	call    LCD_cursor_off ;turn off cursor and blinking
 	call	LCD_Clear
-	call	LCD_Line1	    ;set position in LCD to first line, first character
+	call	LCD_Set_to_Line_1	    ;set position in LCD to first line, first character
 	call	Write_Error  
 	bra	Cancel
     

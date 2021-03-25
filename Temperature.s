@@ -5,7 +5,8 @@ extrn	LCD_Setup, LCD_Clear, LCD_Set_Position, LCD_Send_Byte_D
 extrn	LCD_Write_Hex, LCD_Write_Character, LCD_Write_Low_Nibble ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
 extrn	Multiply24x8, Multiply16x8 
-extrn	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l, out_24x8_l, out_24x8_ul, out_24x8_lu, out_24x8_u, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
+extrn	out_16x8_h, out_16x8_m, out_16x8_l, in_16x8_8, in_16x8_16h, in_16x8_16l
+extrn   out_24x8_l, out_24x8_ul, out_24x8_lu, out_24x8_u, in_24x8_24l,in_24x8_24m, in_24x8_24h, in_24x8_8
     
 global	Temp
 	

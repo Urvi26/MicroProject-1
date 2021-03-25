@@ -3,7 +3,7 @@
 extrn	Clock_Setup, Clock
 extrn	operation, Operation_Setup
 extrn	LCD_Setup, LCD_Clear
-extrn	Keypad, keypad_val, keypad_ascii
+extrn	Keypad, keypad_val
 extrn	Alarm_Setup
 extrn	ADC_Setup    
 global	operation_check
@@ -26,10 +26,12 @@ start:
 	call	Operation_Setup
 	call	Alarm_Setup
 	call	ADC_Setup
+	
 	clrf	operation_check, A
 	
 settings_clock:
 	call	Keypad
+	
 	movlw	0x0f
 	CPFSEQ	keypad_val, A
 	bra	settings_clock

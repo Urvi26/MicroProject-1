@@ -1,16 +1,17 @@
 #include <xc.inc>
 
-extrn	LCD_Write_Character, LCD_Set_Position, LCD_Line1, LCD_Line2, LCD_Write_Low_Nibble, LCD_delay_ms
+extrn	LCD_Write_Character, LCD_Set_to_Line_1, LCD_Set_to_Line_2, LCD_Write_Low_Nibble, LCD_delay_ms
     
-global  Write_ALARM, Write_Snooze, Write_Error, Write_no_alarm, Write_New, Write_Time, Write_Temp, Write_Alarm
-global	Write_colon, Write_space,delay, Write_zeros
+global  Write_ALARM, Write_Snooze, Write_Error, Write_zeros, Write_no_alarm
+global	Write_New, Write_colon, Write_space, Write_Time, Write_Temp, Write_Alarm
+global	delay
     
-psect	Write_Display_code, class=CODE 
+psect	Write_and_Display_code, class=CODE 
 
 
 Write_ALARM:				    ;write the words 'time:' before displaying the time
 	;call delay
-	call	LCD_Line1
+	call	LCD_Set_to_Line_2
 	movlw	'A'
 	call	LCD_Write_Character	;write 'A'
 	movlw	'L'
@@ -34,7 +35,7 @@ Write_ALARM:				    ;write the words 'time:' before displaying the time
 	return	
 	
  Write_Snooze:				    ;write the words 'time:' before displaying the time
-	call LCD_Line2
+	call LCD_Set_to_Line_2
 	movlw	'S'
 	call	LCD_Write_Character	;write 'S'
 	movlw	'n'
@@ -151,8 +152,6 @@ Write_zeros:
 	
 Write_no_alarm:
 	call delay
-	;movlw	11000110B
-	;call	LCD_Set_Position	    ;set position in LCD to first line, first character
 	movlw   'N'
 	call    LCD_Write_Character	;write 'N'
 	movlw   'o'

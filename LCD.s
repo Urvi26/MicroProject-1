@@ -3,7 +3,7 @@
 global  LCD_Setup, LCD_Write_Hex, LCD_Set_Position, LCD_Send_Byte_D, LCD_Send_Byte_I
 global	LCD_Write_Character, LCD_Write_Low_Nibble, LCD_Clear, LCD_Write_High_Nibble
 global	LCD_delay_ms, LCD_delay_x4us
-global	LCD_cursor_on, LCD_cursor_off, LCD_Line1, LCD_Line2
+global	LCD_cursor_on, LCD_cursor_off, LCD_Set_to_Line_1, LCD_Set_to_Line_2
     
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -11,9 +11,6 @@ LCD_cnt_h:	ds 1	; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms:	ds 1	; reserve 1 byte for ms counter
 LCD_tmp:	ds 1	; reserve 1 byte for temporary use
 LCD_counter:	ds 1	; reserve 1 byte for counting through nessage
-counter_Time:	ds  1
-counter_Temp:	ds  1
-counter_Alarm:	ds  1
     
 psect	udata_bank4
 myArrayTime:    ds 0x80
@@ -69,26 +66,6 @@ LCD_Setup:
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
 	return
-
-LCD_cursor_off:
-	movlw	00001100B
-	call    LCD_Send_Byte_I	;set cursor off
-	return
-	
-LCD_cursor_on:
-	movlw	00001111B
-	call    LCD_Send_Byte_I	;set cursor on
-	return
-	
-LCD_Line1:
-    movlw   10000000B
-    call    LCD_Set_Position	;set cursor on
-    return
-    
-LCD_Line2:
-    movlw   11000000B
-    call    LCD_Set_Position	;set cursor on
-    return
 	
 LCD_Write_Character:	;send ascii code to LCD to display character
 	call	LCD_Send_Byte_D
@@ -102,6 +79,26 @@ LCD_Set_Position:	;set position at which inputs will be displayed
 	call    LCD_delay_x4us
 	return
 	
+LCD_cursor_off:
+	movlw	00001100B
+	call    LCD_Send_Byte_I	;set cursor off
+	return
+	
+LCD_cursor_on:
+	movlw	00001111B
+	call    LCD_Send_Byte_I	;set cursor on
+	return
+	
+LCD_Set_to_Line_1:
+    movlw   10000000B
+    call    LCD_Set_Position	;set cursor on
+    return
+    
+LCD_Set_to_Line_2:
+    movlw   11000000B
+    call    LCD_Set_Position	;set cursor on
+    return
+    
 LCD_Write_Hex:			; Writes byte stored in W as hex
 	movwf	LCD_hex_tmp, A
 	swapf	LCD_hex_tmp, W, A	; high nibble first
@@ -130,7 +127,6 @@ LCD_Write_High_Nibble:
 	swapf	LCD_hex_tmp, W, A	; high nibble first
 	call	LCD_Hex_Nib
 	return
-	
 	
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter, A

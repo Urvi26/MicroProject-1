@@ -28,7 +28,7 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
     <itemPath>Alarm.s</itemPath>
-    <itemPath>Write_Display.s</itemPath>
+    <itemPath>Write_and_Display.s</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>

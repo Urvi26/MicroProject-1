@@ -1,13 +1,14 @@
 #include <xc.inc>
 
 extrn	clock_sec, clock_min, clock_hrs
-extrn	LCD_Line2, Write_ALARM, Write_Snooze
+extrn	Write_ALARM, Write_Snooze
 extrn	Keypad, keypad_val
-extrn	LCD_delay_x4us
+extrn	LCD_delay_x4us, LCD_Set_to_Line_2
 extrn	hex_C, hex_A, skip_byte
+    
 global	alarm_sec, alarm_min, alarm_hrs
-global Check_Alarm, Alarm_Setup
-global alarm_on
+global	Check_Alarm, Alarm_Setup
+global	alarm_on
     
 psect	udata_acs
 
@@ -40,10 +41,10 @@ Alarm_Setup:
 Check_Alarm:
 	movlw	0x00
 	cpfseq	alarm_countdown, A
-	bra	Decrement_Alarm_Buzz
+	bra	Decrement_Alarm_Countdown
 	bra	Compare_Alarm
 
-Decrement_Alarm_Buzz:
+Decrement_Alarm_Countdown:
 	decf	alarm_countdown, A
 	call	ALARM
 	return
@@ -67,7 +68,6 @@ Compare_Alarm:
 	call ALARM
 	return
 ALARM:
-	call	LCD_Line2
 	call	Write_ALARM
 
 	BTG	buzz_on_or_off,0
@@ -147,13 +147,13 @@ Snooze_Alarm:
 	movlw	0x05
 	addwf	alarm_min, A
 	movlw	0x3B
-	cpfsgt	alarm_min, A
+	CPFSGT	alarm_min, A
 	return
 	movlw	0x3C
 	subwf	alarm_min, 1, 0	;result stored back in f
 	incf	alarm_hrs, A
 	movlw	0x17
-	cpfsgt	alarm_hrs, A
+	CPFSGT	alarm_hrs, A
 	return
 	movlw	0x18
 	subwf	alarm_hrs, 1, 0
